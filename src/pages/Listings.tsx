@@ -11,7 +11,7 @@ export default function Listings() {
   const [params] = useSearchParams();
   const [location, setLocation] = useState(params.get('location') || '');
   const [forType, setForType] = useState<'buy' | 'rent'>( (params.get('for') as any) || 'buy');
-  const [type, setType] = useState<'Apartment' | 'House' | 'Villa' | ''>((params.get('type') as any) || '');
+  const [type, setType] = useState<'Apartment' | 'House' | 'Villa' | 'any'>((params.get('type') as any) || 'any');
   const [min, setMin] = useState(params.get('min') || '');
   const [max, setMax] = useState(params.get('max') || '');
   const [bed, setBed] = useState('');
@@ -22,7 +22,7 @@ export default function Listings() {
     return properties.filter((p: Property) => {
       if (p.for !== forType) return false;
       if (location && !p.location.toLowerCase().includes(location.toLowerCase())) return false;
-      if (type && p.type !== type) return false;
+      if (type !== 'any' && p.type !== type) return false;
       if (min && p.price < Number(min)) return false;
       if (max && p.price > Number(max)) return false;
       if (bed && p.bedrooms < Number(bed)) return false;
@@ -54,7 +54,7 @@ export default function Listings() {
         <Select value={type} onValueChange={(v)=>setType(v as any)}>
           <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any</SelectItem>
+            <SelectItem value="any">Any</SelectItem>
             <SelectItem value="Apartment">Apartment</SelectItem>
             <SelectItem value="House">House</SelectItem>
             <SelectItem value="Villa">Villa</SelectItem>

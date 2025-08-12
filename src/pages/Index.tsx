@@ -42,7 +42,7 @@ const Index = () => {
             if (f.location) params.set('location', f.location);
             if (f.minPrice) params.set('min', String(f.minPrice));
             if (f.maxPrice) params.set('max', String(f.maxPrice));
-            if (f.type) params.set('type', f.type);
+            if (f.type && f.type !== 'any') params.set('type', f.type);
             navigate(`/listings?${params.toString()}`);
           }} />
         </div>

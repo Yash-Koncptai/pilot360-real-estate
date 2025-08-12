@@ -9,7 +9,7 @@ export type SearchFilters = {
   location: string;
   minPrice?: number;
   maxPrice?: number;
-  type?: 'Apartment' | 'House' | 'Villa' | '';
+  type?: 'Apartment' | 'House' | 'Villa' | 'any';
 };
 
 export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilters) => void }) {
@@ -17,7 +17,7 @@ export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilte
   const [location, setLocation] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [type, setType] = useState<'Apartment' | 'House' | 'Villa' | ''>('');
+  const [type, setType] = useState<'Apartment' | 'House' | 'Villa' | 'any'>('any');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +44,7 @@ export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilte
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Any</SelectItem>
+          <SelectItem value="any">Any</SelectItem>
           <SelectItem value="Apartment">Apartment</SelectItem>
           <SelectItem value="House">House</SelectItem>
           <SelectItem value="Villa">Villa</SelectItem>
