@@ -20,7 +20,7 @@ import house1 from '@/assets/properties/house1.jpg';
 import house2 from '@/assets/properties/house2.jpg';
 import house3 from '@/assets/properties/house3.jpg';
 import house4 from '@/assets/properties/house4.jpg';
-import placeholder from '/public/placeholder.svg';
+const placeholder = '/placeholder.svg';
 
 export const properties: Property[] = [
   {
