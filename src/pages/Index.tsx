@@ -32,36 +32,64 @@ const Index = () => {
 
       <AIChatbot />
 
-      <section className="text-center space-y-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Badge variant="secondary" className="px-3 py-1">
-              <Brain className="w-4 h-4 mr-1" />
-              AI-Powered
-            </Badge>
-            <Badge variant="secondary" className="px-3 py-1">
-              <MapPin className="w-4 h-4 mr-1" />
-              Ahmedabad Focus
-            </Badge>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Smart Real Estate Platform for 
-            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"> Ahmedabad</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Discover properties with AI insights, interactive maps, and personalized recommendations. 
-            Experience the future of property search in Ahmedabad.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button size="lg" onClick={() => navigate('/map')} className="flex items-center gap-2">
-              <Map className="w-5 h-5" />
-              Explore AI Map
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/listings')} className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Browse Properties
-            </Button>
+      {/* Hero Section with Housing.com style gradient */}
+      <section className="relative">
+        <div 
+          className="py-20 px-4 text-center text-white"
+          style={{ background: 'var(--gradient-hero)' }}
+        >
+          <div className="container mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Badge className="px-3 py-1 bg-white/20 text-white border-white/30">
+                <Brain className="w-4 h-4 mr-1" />
+                AI-Powered
+              </Badge>
+              <Badge className="px-3 py-1 bg-white/20 text-white border-white/30">
+                <MapPin className="w-4 h-4 mr-1" />
+                15,000+ Properties
+              </Badge>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Properties to buy in Ahmedabad
+            </h1>
+            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+              Discover 15,000+ verified properties with AI-powered insights, smart search, and interactive maps.
+            </p>
+            
+            {/* Property Search integrated in hero */}
+            <div className="max-w-4xl mx-auto mb-8 bg-white/10 backdrop-blur-sm rounded-lg p-6">
+              <PropertySearch onSearch={(f) => {
+                const params = new URLSearchParams();
+                params.set('for', f.forType);
+                if (f.location) params.set('location', f.location);
+                if (f.minPrice) params.set('min', String(f.minPrice));
+                if (f.maxPrice) params.set('max', String(f.maxPrice));
+                if (f.type && f.type !== 'any') params.set('type', f.type);
+                if (f.bedrooms) params.set('bedrooms', String(f.bedrooms));
+                if (f.aiSearch) params.set('ai', f.aiSearch);
+                navigate(`/listings?${params.toString()}`);
+              }} />
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/map')} 
+                className="flex items-center gap-2 bg-white text-primary hover:bg-gray-100"
+              >
+                <Map className="w-5 h-5" />
+                Explore AI Map
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => navigate('/listings')} 
+                className="flex items-center gap-2 border-white text-white hover:bg-white/10"
+              >
+                <Search className="w-5 h-5" />
+                Browse Properties
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -99,24 +127,26 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Property Search */}
-      <section className="bg-card/30 p-8 rounded-xl border">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Find Your Perfect Property</h2>
-            <p className="text-muted-foreground">Use our AI-powered search to discover properties that match your exact needs.</p>
-          </div>
-          <PropertySearch onSearch={(f) => {
-            const params = new URLSearchParams();
-            params.set('for', f.forType);
-            if (f.location) params.set('location', f.location);
-            if (f.minPrice) params.set('min', String(f.minPrice));
-            if (f.maxPrice) params.set('max', String(f.maxPrice));
-            if (f.type && f.type !== 'any') params.set('type', f.type);
-            if (f.bedrooms) params.set('bedrooms', String(f.bedrooms));
-            if (f.aiSearch) params.set('ai', f.aiSearch);
-            navigate(`/listings?${params.toString()}`);
-          }} />
+      {/* Housing.com style content sections */}
+      <section className="my-16">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">Housing Style</h2>
+          <p className="text-muted-foreground">Explore properties by preference</p>
+        </div>
+        
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {[
+            { icon: "🏠", title: "Ready to Move", desc: "Immediate possession" },
+            { icon: "🔑", title: "Newly Listed", desc: "Fresh arrivals" },
+            { icon: "💰", title: "Best Value", desc: "Great deals" },
+            { icon: "⭐", title: "Premium", desc: "Luxury properties" }
+          ].map((item, idx) => (
+            <div key={idx} className="text-center p-4 rounded-lg border bg-card hover:shadow-md transition-shadow cursor-pointer">
+              <div className="text-2xl mb-2">{item.icon}</div>
+              <h3 className="font-semibold text-sm">{item.title}</h3>
+              <p className="text-xs text-muted-foreground">{item.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
