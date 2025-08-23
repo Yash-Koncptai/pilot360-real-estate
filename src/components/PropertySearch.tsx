@@ -20,7 +20,7 @@ export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilte
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [type, setType] = useState<'Apartment' | 'House' | 'Villa' | 'Office' | 'any'>('any');
-  const [bedrooms, setBedrooms] = useState('');
+  const [bedrooms, setBedrooms] = useState('any');
   const [aiSearch, setAiSearch] = useState('');
 
   const submit = (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilte
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       type,
-      bedrooms: bedrooms ? Number(bedrooms) : undefined,
+      bedrooms: bedrooms && bedrooms !== 'any' ? Number(bedrooms) : undefined,
       aiSearch: aiSearch || undefined,
     });
   };
@@ -73,7 +73,7 @@ export default function PropertySearch({ onSearch }: { onSearch: (f: SearchFilte
             <SelectValue placeholder="Beds" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any</SelectItem>
+            <SelectItem value="any">Any</SelectItem>
             <SelectItem value="1">1 BHK</SelectItem>
             <SelectItem value="2">2 BHK</SelectItem>
             <SelectItem value="3">3 BHK</SelectItem>
