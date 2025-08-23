@@ -1,11 +1,12 @@
 import Seo from "@/components/Seo";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useEffect, useRef, useState } from 'react';
-import { properties, priceHeatmapData } from '@/data/properties';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { properties, priceHeatmapData, Property } from '@/data/properties';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, TrendingUp, Users, Shield } from "lucide-react";
+import { Star, MapPin, Clock, TrendingUp, Users, Shield, Filter } from "lucide-react";
+import PropertyFilters, { PropertyFilters as FiltersType } from '@/components/PropertyFilters';
 
 // Force rebuild to clear any cached references
 
@@ -14,6 +15,87 @@ export default function MapPage() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [viewMode, setViewMode] = useState<'properties' | 'landmarks'>('properties');
+  const [showFilters, setShowFilters] = useState(true);
+  const [filters, setFilters] = useState<FiltersType>({
+    purpose: 'buy',
+    propertyTypes: [],
+    budgetRange: [0, 50000000],
+    location: '',
+    size: 'any',
+    sqftRange: [0, 5000],
+    commute: '',
+    amenities: [],
+    aiSearch: ''
+  });
+
+  // Calculate AI match scores and filter properties
+  const filteredProperties = useMemo(() => {
+    let filtered = properties.filter(property => {
+      // Purpose filter
+      if (filters.purpose !== property.for && filters.purpose !== 'investment' && filters.purpose !== 'commercial') return false;
+      
+      // Budget filter
+      if (property.price < filters.budgetRange[0] || property.price > filters.budgetRange[1]) return false;
+      
+      // Location filter
+      if (filters.location && !property.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
+      
+      // Property type filter
+      if (filters.propertyTypes.length > 0) {
+        const propertyTypeMatches = filters.propertyTypes.some(type => 
+          property.type.toLowerCase().includes(type) || type === 'apartment' && property.type === 'Apartment'
+        );
+        if (!propertyTypeMatches) return false;
+      }
+      
+      // Size filter
+      if (filters.size !== 'any') {
+        const sizeNumber = parseInt(filters.size.replace('bhk', ''));
+        if (filters.size.includes('bhk') && property.bedrooms !== sizeNumber) return false;
+      }
+      
+      // AI Search filter
+      if (filters.aiSearch) {
+        const searchLower = filters.aiSearch.toLowerCase();
+        const searchable = `${property.title} ${property.location} ${property.type} ${property.bedrooms}bhk`.toLowerCase();
+        if (!searchable.includes(searchLower)) return false;
+      }
+      
+      return true;
+    });
+
+    // Calculate AI match scores
+    return filtered.map(property => {
+      let matchScore = 50; // Base score
+      
+      // Boost score based on filters
+      if (filters.purpose === property.for) matchScore += 20;
+      if (filters.location && property.location.toLowerCase().includes(filters.location.toLowerCase())) matchScore += 15;
+      if (property.aiInsights?.bestMatch) matchScore += 25;
+      if (filters.amenities.length > 0) {
+        const amenityMatches = filters.amenities.filter(amenity => 
+          property.amenities?.some(a => a.toLowerCase().includes(amenity.toLowerCase()))
+        ).length;
+        matchScore += (amenityMatches / filters.amenities.length) * 20;
+      }
+      
+      return {
+        ...property,
+        aiMatchScore: Math.min(matchScore, 99)
+      };
+    }).sort((a, b) => b.aiMatchScore - a.aiMatchScore);
+  }, [filters]);
+
+  // Top 3 suggestions
+  const topSuggestions = useMemo(() => {
+    return filteredProperties.slice(0, 3).map(property => ({
+      id: property.id,
+      title: property.title,
+      matchScore: property.aiMatchScore,
+      badge: property.aiInsights?.bestMatch ? 'Best Match' : 
+             property.aiMatchScore > 80 ? 'Great Match' : 'Good Match'
+    }));
+  }, [filteredProperties]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -33,17 +115,20 @@ export default function MapPage() {
     
     if (viewMode === 'properties') {
       // Add property markers
-      properties.forEach((property) => {
+      filteredProperties.forEach((property) => {
         const formatPrice = (value: number, forType: 'buy' | 'rent') => {
           const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
           return forType === 'rent' ? `${inr}/mo` : inr;
         };
 
         const popupHtml = `
-          <div style="max-width:300px;" class="p-3">
+          <div style="max-width:320px;" class="p-3">
             <div class="flex items-start justify-between mb-2">
               <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${property.title}</h3>
-              ${property.aiInsights?.bestMatch ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ AI Best Match</span>' : ''}
+              <div style="display:flex;gap:4px;flex-direction:column;align-items:end;">
+                ${property.aiInsights?.bestMatch ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ AI Best Match</span>' : ''}
+                <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${property.aiMatchScore}% Match</span>
+              </div>
             </div>
             <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(property.price, property.for)}</div>
             <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${property.location}</div>
@@ -180,7 +265,25 @@ export default function MapPage() {
       map.remove();
       mapRef.current = null;
     }
-  }, [viewMode, showHeatmap]);
+  }, [viewMode, showHeatmap, filteredProperties]);
+
+  const handleFiltersChange = (newFilters: FiltersType) => {
+    setFilters(newFilters);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      purpose: 'buy',
+      propertyTypes: [],
+      budgetRange: [0, 50000000],
+      location: '',
+      size: 'any',
+      sqftRange: [0, 5000],
+      commute: '',
+      amenities: [],
+      aiSearch: ''
+    });
+  };
 
   return (
     <>
@@ -190,97 +293,112 @@ export default function MapPage() {
         canonicalPath="/map"
       />
       
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">AI-Powered Property Map</h1>
-          <div className="flex gap-2">
-            <Button 
-              variant={viewMode === 'properties' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('properties')}
-            >
-              Properties
-            </Button>
-            <Button 
-              variant={viewMode === 'landmarks' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('landmarks')}
-            >
-              Landmarks
-            </Button>
+      <div className="flex h-screen bg-background">
+        {/* Sidebar Filters */}
+        {viewMode === 'properties' && showFilters && (
+          <div className="w-80 flex-shrink-0">
+            <PropertyFilters 
+              onFiltersChange={handleFiltersChange}
+              onClearFilters={clearFilters}
+              topSuggestions={topSuggestions}
+            />
+          </div>
+        )}
+        
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-border bg-background">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold">AI-Powered Property Map</h1>
+              <div className="flex gap-2">
+                {viewMode === 'properties' && (
+                  <Button 
+                    variant={showFilters ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filters
+                  </Button>
+                )}
+                <Button 
+                  variant={viewMode === 'properties' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setViewMode('properties')}
+                >
+                  Properties
+                </Button>
+                <Button 
+                  variant={viewMode === 'landmarks' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setViewMode('landmarks')}
+                >
+                  Landmarks
+                </Button>
+                {viewMode === 'properties' && (
+                  <Button 
+                    variant={showHeatmap ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                  >
+                    Price Heatmap
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Results Summary */}
             {viewMode === 'properties' && (
-              <Button 
-                variant={showHeatmap ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setShowHeatmap(!showHeatmap)}
-              >
-                Price Heatmap
-              </Button>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>{filteredProperties.length} properties found</span>
+                {filters.aiSearch && (
+                  <Badge variant="secondary" className="text-xs">
+                    AI Search: "{filters.aiSearch}"
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Map Controls Info */}
-        <div className="flex flex-wrap gap-2 text-sm">
-          {viewMode === 'properties' ? (
-            <>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                AI Best Match
-              </Badge>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                For Rent
-              </Badge>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                For Sale
-              </Badge>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                Premium Villa
-              </Badge>
-            </>
-          ) : (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Famous Landmarks
-            </Badge>
-          )}
-        </div>
-
-        <div ref={mapContainer} className="w-full h-[500px] rounded-lg shadow border" />
-
-        {viewMode === 'properties' ? (
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
-            <div className="p-4 bg-card rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="font-medium">AI Price Analysis</span>
-              </div>
-              <p className="text-muted-foreground">Properties shown with real-time market analysis and investment potential ratings.</p>
-            </div>
-            <div className="p-4 bg-card rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-blue-500" />
-                <span className="font-medium">Neighborhood Insights</span>
-              </div>
-              <p className="text-muted-foreground">Schools, hospitals, crime rates, and commute times for each property location.</p>
-            </div>
-            <div className="p-4 bg-card rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Personalized Matches</span>
-              </div>
-              <p className="text-muted-foreground">AI identifies best properties based on your budget, preferences, and requirements.</p>
+          {/* Map Controls Info */}
+          <div className="p-4 border-b border-border">
+            <div className="flex flex-wrap gap-2 text-sm">
+              {viewMode === 'properties' ? (
+                <>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    AI Best Match
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    For Rent
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    For Sale
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    Premium Villa
+                  </Badge>
+                </>
+              ) : (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Famous Landmarks
+                </Badge>
+              )}
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Explore 5 famous landmarks in Ahmedabad. Click on any marker to learn more about each location.
-          </p>
-        )}
+
+          {/* Map Container */}
+          <div className="flex-1 relative">
+            <div ref={mapContainer} className="absolute inset-0" />
+          </div>
+        </div>
       </div>
+
     </>
   );
 }
