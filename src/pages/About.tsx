@@ -1,19 +1,12 @@
 import Seo from "@/components/Seo";
-
 export default function About() {
-  return (
-    <>
-      <Seo
-        title="About Us | EstateHub"
-        description="Learn about EstateHub's mission and team. We help people buy and rent properties with a modern, transparent experience."
-        canonicalPath="/about"
-      />
+  return <>
+      <Seo title="About Us | EstateHub" description="Learn about EstateHub's mission and team. We help people buy and rent properties with a modern, transparent experience." canonicalPath="/about" />
       
       {/* Housing.com style hero section */}
-      <section 
-        className="py-16 px-4 text-center text-white mb-12"
-        style={{ background: 'var(--gradient-hero)' }}
-      >
+      <section className="py-16 px-4 text-center text-white mb-12" style={{
+      background: 'var(--gradient-hero)'
+    }}>
         <div className="container mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">About Us</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
@@ -24,7 +17,7 @@ export default function About() {
 
       <div className="container mx-auto px-4">
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Welcome to Housing.com</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Welcome to EstateHub</h2>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <p className="text-muted-foreground mb-4">
@@ -59,35 +52,47 @@ export default function About() {
         <section className="mt-12">
           <h2 className="text-2xl font-bold mb-8 text-center">Our Journey</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { year: '2023', title: 'Founded', desc: 'Started with a vision to revolutionize real estate' },
-              { year: '2024', title: 'AI Integration', desc: 'Launched AI-powered property recommendations' },
-              { year: '2025', title: 'Market Leader', desc: 'Became Ahmedabad\'s most trusted property platform' }
-            ].map((milestone) => (
-              <div key={milestone.year} className="text-center p-6 rounded-lg border bg-card hover:shadow-md transition-shadow">
+            {[{
+            year: '2023',
+            title: 'Founded',
+            desc: 'Started with a vision to revolutionize real estate'
+          }, {
+            year: '2024',
+            title: 'AI Integration',
+            desc: 'Launched AI-powered property recommendations'
+          }, {
+            year: '2025',
+            title: 'Market Leader',
+            desc: 'Became Ahmedabad\'s most trusted property platform'
+          }].map(milestone => <div key={milestone.year} className="text-center p-6 rounded-lg border bg-card hover:shadow-md transition-shadow">
                 <div className="text-3xl font-bold text-primary mb-2">{milestone.year}</div>
                 <h3 className="font-semibold mb-2">{milestone.title}</h3>
                 <p className="text-sm text-muted-foreground">{milestone.desc}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </section>
 
         <section className="mt-12">
           <h2 className="text-2xl font-bold mb-8 text-center">Meet Our Team</h2>
           <div className="grid gap-6 md:grid-cols-3">
-            {[{name:'Alex Carter',role:'CEO'},{name:'Jamie Lee',role:'Head of Product'},{name:'Riley Patel',role:'CTO'}].map((m)=> (
-              <div key={m.name} className="p-6 rounded-lg border bg-card hover:shadow-md transition-shadow text-center">
+            {[{
+            name: 'Alex Carter',
+            role: 'CEO'
+          }, {
+            name: 'Jamie Lee',
+            role: 'Head of Product'
+          }, {
+            name: 'Riley Patel',
+            role: 'CTO'
+          }].map(m => <div key={m.name} className="p-6 rounded-lg border bg-card hover:shadow-md transition-shadow text-center">
                 <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary mx-auto mb-4">
-                  {m.name.split(' ').map(p=>p[0]).join('')}
+                  {m.name.split(' ').map(p => p[0]).join('')}
                 </div>
                 <h3 className="font-semibold text-lg">{m.name}</h3>
                 <p className="text-sm text-muted-foreground">{m.role}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </section>
       </div>
-    </>
-  );
+    </>;
 }
