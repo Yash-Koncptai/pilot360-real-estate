@@ -7,37 +7,28 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Brain, TrendingUp, Users, Search, Map } from "lucide-react";
-
 const Index = () => {
   const navigate = useNavigate();
-
-  return (
-    <>
-      <Seo
-        title="AI-Powered Real Estate Platform | Ahmedabad Properties"
-        description="Discover properties in Ahmedabad with AI insights. Interactive map, personalized recommendations, and smart property search for buying and renting."
-        canonicalPath="/"
-        structuredData={{
-          '@context': 'https://schema.org',
-          '@type': 'WebSite',
-          name: 'AI EstateHub',
-          url: window.location.origin,
-          potentialAction: {
-            '@type': 'SearchAction',
-            target: `${window.location.origin}/listings?q={search_term_string}`,
-            'query-input': 'required name=search_term_string'
-          }
-        }}
-      />
+  return <>
+      <Seo title="AI-Powered Real Estate Platform | Ahmedabad Properties" description="Discover properties in Ahmedabad with AI insights. Interactive map, personalized recommendations, and smart property search for buying and renting." canonicalPath="/" structuredData={{
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'AI EstateHub',
+      url: window.location.origin,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${window.location.origin}/listings?q={search_term_string}`,
+        'query-input': 'required name=search_term_string'
+      }
+    }} />
 
       <AIChatbot />
 
       {/* Hero Section with Housing.com style gradient */}
       <section className="relative">
-        <div 
-          className="py-20 px-4 text-center text-white"
-          style={{ background: 'var(--gradient-hero)' }}
-        >
+        <div className="py-20 px-4 text-center text-white" style={{
+        background: 'var(--gradient-hero)'
+      }}>
           <div className="container mx-auto">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Badge className="px-3 py-1 bg-white/20 text-white border-white/30">
@@ -58,34 +49,25 @@ const Index = () => {
             
             {/* Property Search integrated in hero */}
             <div className="max-w-4xl mx-auto mb-8 bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <PropertySearch onSearch={(f) => {
-                const params = new URLSearchParams();
-                params.set('for', f.forType);
-                if (f.location) params.set('location', f.location);
-                if (f.minPrice) params.set('min', String(f.minPrice));
-                if (f.maxPrice) params.set('max', String(f.maxPrice));
-                if (f.type && f.type !== 'any') params.set('type', f.type);
-                if (f.bedrooms) params.set('bedrooms', String(f.bedrooms));
-                if (f.aiSearch) params.set('ai', f.aiSearch);
-                navigate(`/listings?${params.toString()}`);
-              }} />
+              <PropertySearch onSearch={f => {
+              const params = new URLSearchParams();
+              params.set('for', f.forType);
+              if (f.location) params.set('location', f.location);
+              if (f.minPrice) params.set('min', String(f.minPrice));
+              if (f.maxPrice) params.set('max', String(f.maxPrice));
+              if (f.type && f.type !== 'any') params.set('type', f.type);
+              if (f.bedrooms) params.set('bedrooms', String(f.bedrooms));
+              if (f.aiSearch) params.set('ai', f.aiSearch);
+              navigate(`/listings?${params.toString()}`);
+            }} />
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/map')} 
-                className="flex items-center gap-2 bg-white text-primary hover:bg-gray-100"
-              >
+              <Button size="lg" onClick={() => navigate('/map')} className="flex items-center gap-2 bg-white text-primary hover:bg-gray-100">
                 <Map className="w-5 h-5" />
                 Explore AI Map
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                onClick={() => navigate('/listings')} 
-                className="flex items-center gap-2 border-white text-white hover:bg-white/10"
-              >
+              <Button size="lg" variant="outline" onClick={() => navigate('/listings')} className="flex items-center gap-2 border-white text-white bg-slate-600 hover:bg-slate-500">
                 <Search className="w-5 h-5" />
                 Browse Properties
               </Button>
@@ -135,18 +117,27 @@ const Index = () => {
         </div>
         
         <div className="grid md:grid-cols-4 gap-4 mb-8">
-          {[
-            { icon: "🏠", title: "Ready to Move", desc: "Immediate possession" },
-            { icon: "🔑", title: "Newly Listed", desc: "Fresh arrivals" },
-            { icon: "💰", title: "Best Value", desc: "Great deals" },
-            { icon: "⭐", title: "Premium", desc: "Luxury properties" }
-          ].map((item, idx) => (
-            <div key={idx} className="text-center p-4 rounded-lg border bg-card hover:shadow-md transition-shadow cursor-pointer">
+          {[{
+          icon: "🏠",
+          title: "Ready to Move",
+          desc: "Immediate possession"
+        }, {
+          icon: "🔑",
+          title: "Newly Listed",
+          desc: "Fresh arrivals"
+        }, {
+          icon: "💰",
+          title: "Best Value",
+          desc: "Great deals"
+        }, {
+          icon: "⭐",
+          title: "Premium",
+          desc: "Luxury properties"
+        }].map((item, idx) => <div key={idx} className="text-center p-4 rounded-lg border bg-card hover:shadow-md transition-shadow cursor-pointer">
               <div className="text-2xl mb-2">{item.icon}</div>
               <h3 className="font-semibold text-sm">{item.title}</h3>
               <p className="text-xs text-muted-foreground">{item.desc}</p>
-            </div>
-          ))}
+            </div>)}
         </div>
       </section>
 
@@ -161,9 +152,7 @@ const Index = () => {
           </Button>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.filter(p => p.aiInsights?.bestMatch).slice(0,3).map(p => (
-            <PropertyCard key={p.id} property={p} />
-          ))}
+          {properties.filter(p => p.aiInsights?.bestMatch).slice(0, 3).map(p => <PropertyCard key={p.id} property={p} />)}
         </div>
       </section>
 
@@ -205,8 +194,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-    </>
-  );
+    </>;
 };
-
 export default Index;
