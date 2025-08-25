@@ -112,7 +112,7 @@ export default function MapPage() {
             <div class="flex items-start justify-between mb-2">
               <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${property.title}</h3>
               <div style="display:flex;gap:4px;flex-direction:column;align-items:end;">
-                ${property.aiInsights?.bestMatch ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ AI Best Match</span>' : ''}
+                ${property.aiInsights?.growthPotential === 'High' ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ High Growth</span>' : ''}
                 <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${property.aiMatchScore}% Match</span>
               </div>
             </div>
