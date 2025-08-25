@@ -2,7 +2,7 @@ import Seo from "@/components/Seo";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { properties, priceHeatmapData, Property } from '@/data/properties';
+import { landProperties, landHeatmapData, LandProperty } from '@/data/landProperties';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock, TrendingUp, Users, Shield, Filter } from "lucide-react";
@@ -28,12 +28,9 @@ export default function MapPage() {
     aiSearch: ''
   });
 
-  // Calculate AI match scores and filter properties
+  // Calculate AI match scores and filter land properties
   const filteredProperties = useMemo(() => {
-    let filtered = properties.filter(property => {
-      // Purpose filter
-      if (filters.purpose !== property.for && filters.purpose !== 'investment' && filters.purpose !== 'commercial') return false;
-      
+    let filtered = landProperties.filter(property => {
       // Budget filter
       if (property.price < filters.budgetRange[0] || property.price > filters.budgetRange[1]) return false;
       
@@ -43,21 +40,15 @@ export default function MapPage() {
       // Property type filter
       if (filters.propertyTypes.length > 0) {
         const propertyTypeMatches = filters.propertyTypes.some(type => 
-          property.type.toLowerCase().includes(type) || type === 'apartment' && property.type === 'Apartment'
+          property.type.toLowerCase().includes(type.toLowerCase())
         );
         if (!propertyTypeMatches) return false;
-      }
-      
-      // Size filter
-      if (filters.size !== 'any') {
-        const sizeNumber = parseInt(filters.size.replace('bhk', ''));
-        if (filters.size.includes('bhk') && property.bedrooms !== sizeNumber) return false;
       }
       
       // AI Search filter
       if (filters.aiSearch) {
         const searchLower = filters.aiSearch.toLowerCase();
-        const searchable = `${property.title} ${property.location} ${property.type} ${property.bedrooms}bhk`.toLowerCase();
+        const searchable = `${property.title} ${property.location} ${property.type}`.toLowerCase();
         if (!searchable.includes(searchLower)) return false;
       }
       
@@ -66,18 +57,11 @@ export default function MapPage() {
 
     // Calculate AI match scores
     return filtered.map(property => {
-      let matchScore = 50; // Base score
+      let matchScore = property.aiInsights?.matchScore || 50;
       
       // Boost score based on filters
-      if (filters.purpose === property.for) matchScore += 20;
       if (filters.location && property.location.toLowerCase().includes(filters.location.toLowerCase())) matchScore += 15;
-      if (property.aiInsights?.bestMatch) matchScore += 25;
-      if (filters.amenities.length > 0) {
-        const amenityMatches = filters.amenities.filter(amenity => 
-          property.amenities?.some(a => a.toLowerCase().includes(amenity.toLowerCase()))
-        ).length;
-        matchScore += (amenityMatches / filters.amenities.length) * 20;
-      }
+      if (property.aiInsights?.growthPotential === 'High') matchScore += 25;
       
       return {
         ...property,
@@ -92,7 +76,7 @@ export default function MapPage() {
       id: property.id,
       title: property.title,
       matchScore: property.aiMatchScore,
-      badge: property.aiInsights?.bestMatch ? 'Best Match' : 
+      badge: property.aiInsights?.growthPotential === 'High' ? 'High Growth' : 
              property.aiMatchScore > 80 ? 'Great Match' : 'Good Match'
     }));
   }, [filteredProperties]);
@@ -116,9 +100,11 @@ export default function MapPage() {
     if (viewMode === 'properties') {
       // Add property markers
       filteredProperties.forEach((property) => {
-        const formatPrice = (value: number, forType: 'buy' | 'rent') => {
-          const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
-          return forType === 'rent' ? `${inr}/mo` : inr;
+        const formatPrice = (value: number) => {
+          if (value >= 10000000) {
+            return `₹${(value / 10000000).toFixed(1)}Cr`;
+          }
+          return `₹${(value / 100000).toFixed(0)}L`;
         };
 
         const popupHtml = `
@@ -130,25 +116,25 @@ export default function MapPage() {
                 <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${property.aiMatchScore}% Match</span>
               </div>
             </div>
-            <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(property.price, property.for)}</div>
+            <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(property.price)}</div>
             <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${property.location}</div>
             <div style="display:flex;gap:6px;margin-bottom:12px;">
               <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${property.type}</span>
-              ${property.bedrooms > 0 ? `<span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${property.bedrooms} Bed</span>` : ''}
-              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${property.bathrooms} Bath</span>
+              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${property.size}</span>
             </div>
             ${property.aiInsights ? `
               <div style="border-top:1px solid hsl(var(--border));padding-top:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <span style="font-size:12px;color:hsl(var(--muted-foreground));">Investment Rating</span>
-                  <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">⭐ ${property.aiInsights.investmentRating}/5</span>
+                  <span style="font-size:12px;color:hsl(var(--muted-foreground));">Expected ROI</span>
+                  <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.expectedROI}</span>
                 </div>
-                ${property.aiInsights.neighborhood.commuteTime ? `<div style="font-size:12px;color:hsl(var(--muted-foreground));margin-bottom:4px;">🕒 ${property.aiInsights.neighborhood.commuteTime}</div>` : ''}
-                <div style="font-size:11px;color:hsl(var(--muted-foreground));line-height:1.4;">${property.aiInsights.priceAnalysis}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <span style="font-size:12px;color:hsl(var(--muted-foreground));">Growth Potential</span>
+                  <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.growthPotential}</span>
+                </div>
                 <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
-                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🏫 ${property.aiInsights.neighborhood.schools} Schools</span>
-                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🏥 ${property.aiInsights.neighborhood.hospitals} Hospitals</span>
-                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${property.aiInsights.neighborhood.crimeRate} Crime</span>
+                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">👁️ ${property.aiInsights.demandIndicators.viewsThisWeek} views</span>
+                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${property.aiInsights.riskLevel} Risk</span>
                 </div>
               </div>
             ` : ''}
@@ -160,9 +146,9 @@ export default function MapPage() {
         
         // Custom marker color based on property type and AI insights
         let markerColor = '#3B82F6'; // Default blue
-        if (property.aiInsights?.bestMatch) markerColor = '#F59E0B'; // Gold for best match
-        else if (property.for === 'rent') markerColor = '#10B981'; // Green for rent
-        else if (property.type === 'Villa') markerColor = '#8B5CF6'; // Purple for villa
+        if (property.aiInsights?.growthPotential === 'High') markerColor = '#F59E0B'; // Gold for high growth
+        else if (property.type === 'Agricultural') markerColor = '#10B981'; // Green for agricultural
+        else if (property.type === 'Industrial') markerColor = '#8B5CF6'; // Purple for industrial
 
         new mapboxgl.Marker({ color: markerColor })
           .setLngLat([property.lng, property.lat])
@@ -175,7 +161,7 @@ export default function MapPage() {
       // Add heatmap if enabled
       if (showHeatmap) {
         map.on('load', () => {
-          priceHeatmapData.forEach((zone, index) => {
+          landHeatmapData.forEach((zone, index) => {
             map.addSource(`heatmap-${index}`, {
               type: 'geojson',
               data: {
@@ -185,7 +171,7 @@ export default function MapPage() {
                   coordinates: [zone.zone[1], zone.zone[0]]
                 },
                 properties: {
-                  avgPrice: zone.avgPrice
+                  avgPricePerSqFt: zone.avgPricePerSqFt
                 }
               }
             });
@@ -196,9 +182,9 @@ export default function MapPage() {
               source: `heatmap-${index}`,
               paint: {
                 'circle-radius': zone.radius / 50,
-                'circle-color': zone.avgPrice > 5500 ? '#EF4444' : zone.avgPrice > 4000 ? '#F59E0B' : '#10B981',
+                'circle-color': zone.avgPricePerSqFt > 5500 ? '#EF4444' : zone.avgPricePerSqFt > 4000 ? '#F59E0B' : '#10B981',
                 'circle-opacity': 0.3,
-                'circle-stroke-color': zone.avgPrice > 5500 ? '#DC2626' : zone.avgPrice > 4000 ? '#D97706' : '#059669',
+                'circle-stroke-color': zone.avgPricePerSqFt > 5500 ? '#DC2626' : zone.avgPricePerSqFt > 4000 ? '#D97706' : '#059669',
                 'circle-stroke-width': 2
               }
             });
@@ -287,9 +273,9 @@ export default function MapPage() {
 
   return (
     <>
-      <Seo
-        title="AI-Powered Real Estate Map | Ahmedabad Properties"
-        description="Discover properties in Ahmedabad with AI insights. Interactive map showing prices, neighborhoods, and personalized property recommendations."
+        <Seo
+        title="AI-Powered Land Investment Map | Premium Land Portal"
+        description="Explore curated land opportunities in Ahmedabad with AI insights. Interactive map showing land prices, growth potential, and investment recommendations."
         canonicalPath="/map"
       />
       
@@ -310,7 +296,7 @@ export default function MapPage() {
           {/* Header */}
           <div className="p-4 border-b border-border bg-background">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold">AI-Powered Property Map</h1>
+              <h1 className="text-2xl font-bold">AI-Powered Land Investment Map</h1>
               <div className="flex gap-2">
                 {viewMode === 'properties' && (
                   <Button 
@@ -351,7 +337,7 @@ export default function MapPage() {
             {/* Results Summary */}
             {viewMode === 'properties' && (
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{filteredProperties.length} properties found</span>
+                <span>{filteredProperties.length} land opportunities found</span>
                 {filters.aiSearch && (
                   <Badge variant="secondary" className="text-xs">
                     AI Search: "{filters.aiSearch}"

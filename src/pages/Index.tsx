@@ -1,199 +1,288 @@
-import Seo from "@/components/Seo";
-import PropertySearch from "@/components/PropertySearch";
-import PropertyCard from "@/components/PropertyCard";
-import AIChatbot from "@/components/AIChatbot";
-import { properties } from "@/data/properties";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MapPin, Brain, TrendingUp, Users, Search, Map } from "lucide-react";
-const Index = () => {
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import OnboardingModal, { UserPreferences } from '@/components/OnboardingModal';
+import LandPropertyCard from '@/components/LandPropertyCard';
+import { landProperties, investmentComparison } from '@/data/landProperties';
+import { Brain, MapPin, TrendingUp, Users, Building, Search, Zap, Home, Star, Award, Shield, Clock, Target, DollarSign, BarChart3, HeartHandshake } from 'lucide-react';
+import Seo from '@/components/Seo';
+
+export default function Index() {
   const navigate = useNavigate();
-  return <>
-      <Seo title="AI-Powered Real Estate Platform | Ahmedabad Properties" description="Discover properties in Ahmedabad with AI insights. Interactive map, personalized recommendations, and smart property search for buying and renting." canonicalPath="/" structuredData={{
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'AI EstateHub',
-      url: window.location.origin,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: `${window.location.origin}/listings?q={search_term_string}`,
-        'query-input': 'required name=search_term_string'
-      }
-    }} />
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
+  const [showUnlockedView, setShowUnlockedView] = useState(false);
 
-      <AIChatbot />
+  const handleOnboardingComplete = (preferences: UserPreferences) => {
+    setUserPreferences(preferences);
+    setShowUnlockedView(true);
+  };
 
-      {/* Hero Section with Housing.com style gradient */}
-      <section className="relative">
-        <div className="py-20 px-4 text-center text-white" style={{
-        background: 'var(--gradient-hero)'
-      }}>
-          <div className="container mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Badge className="px-3 py-1 bg-white/20 text-white border-white/30">
-                <Brain className="w-4 h-4 mr-1" />
-                AI-Powered
+  // Get sample properties for teaser display
+  const teaserProperties = landProperties.slice(0, 3);
+  
+  // Get unlocked properties for demo
+  const unlockedProperties = landProperties.filter(p => !p.isLocked);
+
+  return (
+    <>
+      <Seo 
+        title="Smart Land Investments for High Earners | Premium Land Portal"
+        description="Curated land opportunities with AI-driven insights for high-salaried professionals. Agricultural, commercial, and farmhouse plots with guaranteed ROI."
+        canonicalPath="/"
+      />
+      
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-br from-black via-black/90 to-primary/20 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200')] bg-cover bg-center opacity-30"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-transparent"></div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-12">
+            <div className="flex justify-center gap-2 mb-6">
+              <Badge className="bg-primary/20 text-primary border-primary/30 backdrop-blur-sm">
+                <Brain className="w-3 h-3 mr-1" />
+                AI-Powered Insights
               </Badge>
-              <Badge className="px-3 py-1 bg-white/20 text-white border-white/30">
-                <MapPin className="w-4 h-4 mr-1" />
-                15,000+ Properties
+              <Badge className="bg-primary/20 text-primary border-primary/30 backdrop-blur-sm">
+                <Target className="w-3 h-3 mr-1" />
+                Curated for High Earners
               </Badge>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Properties to buy in Ahmedabad
-            </h1>
-            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-              Discover 15,000+ verified properties with AI-powered insights, smart search, and interactive maps.
-            </p>
             
-            {/* Property Search integrated in hero */}
-            <div className="max-w-4xl mx-auto mb-8 bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <PropertySearch onSearch={f => {
-              const params = new URLSearchParams();
-              params.set('for', f.forType);
-              if (f.location) params.set('location', f.location);
-              if (f.minPrice) params.set('min', String(f.minPrice));
-              if (f.maxPrice) params.set('max', String(f.maxPrice));
-              if (f.type && f.type !== 'any') params.set('type', f.type);
-              if (f.bedrooms) params.set('bedrooms', String(f.bedrooms));
-              if (f.aiSearch) params.set('ai', f.aiSearch);
-              navigate(`/listings?${params.toString()}`);
-            }} />
-            </div>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent">
+              Smart Land Investments<br />for High Earners
+            </h1>
+            
+            <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
+              Curated land opportunities with AI-driven insights, growth forecasts, and personalized recommendations for premium investors.
+            </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/map')} className="flex items-center gap-2 bg-white text-primary hover:bg-gray-100">
-                <Map className="w-5 h-5" />
-                Explore AI Map
+              <Button 
+                size="lg" 
+                onClick={() => setShowOnboarding(true)}
+                className="bg-gradient-to-r from-primary to-primary/80 text-black font-semibold hover:scale-105 transition-transform"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Explore Opportunities
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/listings')} className="flex items-center gap-2 border-white text-white bg-slate-600 hover:bg-slate-500">
-                <Search className="w-5 h-5" />
-                Browse Properties
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => navigate('/map')}
+                className="border-white/30 text-white hover:bg-white/10 hover:scale-105 transition-transform"
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                View AI Map
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* AI Features Showcase */}
-      <section className="grid md:grid-cols-3 gap-6 my-16">
-        <div className="text-center p-6 rounded-lg border bg-card/50">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Brain className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">AI Property Insights</h3>
-          <p className="text-muted-foreground text-sm">
-            Get intelligent analysis of neighborhoods, investment potential, and property value predictions.
-          </p>
-        </div>
-        
-        <div className="text-center p-6 rounded-lg border bg-card/50">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <TrendingUp className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Smart Recommendations</h3>
-          <p className="text-muted-foreground text-sm">
-            Personalized property suggestions based on your budget, preferences, and lifestyle needs.
-          </p>
-        </div>
-        
-        <div className="text-center p-6 rounded-lg border bg-card/50">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Users className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Neighborhood Data</h3>
-          <p className="text-muted-foreground text-sm">
-            Comprehensive data on schools, hospitals, crime rates, and commute times for every location.
-          </p>
-        </div>
-      </section>
-
-      {/* Housing.com style content sections */}
-      <section className="my-16">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Housing Style</h2>
-          <p className="text-muted-foreground">Explore properties by preference</p>
-        </div>
-        
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          {[{
-          icon: "🏠",
-          title: "Ready to Move",
-          desc: "Immediate possession"
-        }, {
-          icon: "🔑",
-          title: "Newly Listed",
-          desc: "Fresh arrivals"
-        }, {
-          icon: "💰",
-          title: "Best Value",
-          desc: "Great deals"
-        }, {
-          icon: "⭐",
-          title: "Premium",
-          desc: "Luxury properties"
-        }].map((item, idx) => <div key={idx} className="text-center p-4 rounded-lg border bg-card hover:shadow-md transition-shadow cursor-pointer">
-              <div className="text-2xl mb-2">{item.icon}</div>
-              <h3 className="font-semibold text-sm">{item.title}</h3>
-              <p className="text-xs text-muted-foreground">{item.desc}</p>
-            </div>)}
-        </div>
-      </section>
-
-      <section className="mt-16" aria-labelledby="featured-heading">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 id="featured-heading" className="text-2xl md:text-3xl font-bold">AI-Recommended Properties</h2>
-            <p className="text-muted-foreground mt-1">Handpicked properties based on market trends and user preferences</p>
-          </div>
-          <Button variant="outline" onClick={() => navigate('/listings')}>
-            View All Properties
-          </Button>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.filter(p => p.aiInsights?.bestMatch).slice(0, 3).map(p => <PropertyCard key={p.id} property={p} />)}
-        </div>
-      </section>
-
-      {/* Interactive Map Showcase */}
-      <section className="mt-16 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-8 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">Explore Ahmedabad Like Never Before</h2>
-        <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-          Our interactive AI-powered map shows real-time property data, price heatmaps, and neighborhood insights. 
-          Click on any property to see detailed AI analysis.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate('/map')} className="flex items-center gap-2">
-            <Map className="w-5 h-5" />
-            Launch Interactive Map
-          </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate('/contact')}>
-            List Your Property
-          </Button>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-6 mt-8 text-left">
-          <div className="bg-background/60 p-4 rounded-lg border">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
-              Price Heatmaps
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Visualize property prices across different areas of Ahmedabad with color-coded heatmaps.
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Our Platform?</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Premium features designed specifically for high-earning professionals seeking smart land investments.
             </p>
           </div>
-          <div className="bg-background/60 p-4 rounded-lg border">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <Brain className="w-5 h-5 text-blue-500" />
-              AI Insights
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Get detailed analysis of each property including investment potential and neighborhood data.
-            </p>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <Target className="w-12 h-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-lg">Curated Investment Options</CardTitle>
+                <CardDescription>
+                  Choose from Agricultural, Non-Agricultural, Country Homes, Farmhouses, and Industrial Land.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <Brain className="w-12 h-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-lg">AI-Powered Insights</CardTitle>
+                <CardDescription>
+                  Get heatmaps, growth forecasts, and personalized suggestions backed by data analytics.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <BarChart3 className="w-12 h-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-lg">Price & Demand Heatmaps</CardTitle>
+                <CardDescription>
+                  Visualize which locations are growing fastest with real-time market data visualization.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <HeartHandshake className="w-12 h-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-lg">One-Stop Solution</CardTitle>
+                <CardDescription>
+                  Finance assistance, documentation help, and post-purchase property management support.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </div>
         </div>
       </section>
-    </>;
-};
-export default Index;
+
+      {/* Comparison Section - Why Land > Flats & Commercial */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Land Investments Beat Traditional Options?</h2>
+            <p className="text-xl text-muted-foreground">Compare the advantages of land investment vs flats and commercial properties</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {investmentComparison.map((option, index) => (
+              <Card key={index} className={`hover:shadow-xl transition-all ${index === 0 ? 'ring-2 ring-primary scale-105' : ''}`}>
+                <CardHeader className="text-center">
+                  <div className="text-4xl mb-4">{option.icon}</div>
+                  <CardTitle className={index === 0 ? 'text-primary' : ''}>{option.type}</CardTitle>
+                  {index === 0 && <Badge className="mt-2">Recommended</Badge>}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">APPRECIATION</div>
+                    <div className="font-bold text-lg">{option.appreciation}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">MAINTENANCE</div>
+                    <div>{option.maintenance}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">FLEXIBILITY</div>
+                    <div>{option.flexibility}</div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <div className="font-semibold text-sm text-green-600">PROS:</div>
+                    {option.pros.map((pro, i) => (
+                      <div key={i} className="text-sm flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        {pro}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="font-semibold text-sm text-red-600">CONS:</div>
+                    {option.cons.map((con, i) => (
+                      <div key={i} className="text-sm flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        {con}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Assurance Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">We Stay With You</h2>
+            <p className="text-xl text-muted-foreground">End-to-end support for your land investment journey</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <DollarSign className="w-16 h-16 text-primary mx-auto mb-4" />
+                <CardTitle>Finance Assistance</CardTitle>
+                <CardDescription className="text-base">
+                  Pre-approved loan options with competitive rates. Our financial partners ensure smooth funding for your investment.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
+                <CardTitle>Documentation Help</CardTitle>
+                <CardDescription className="text-base">
+                  Complete paperwork assistance, legal verification, and compliance support for hassle-free transactions.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            <Card className="hover:shadow-xl transition-shadow">
+              <CardHeader className="text-center">
+                <Clock className="w-16 h-16 text-primary mx-auto mb-4" />
+                <CardTitle>Post-Purchase Management</CardTitle>
+                <CardDescription className="text-base">
+                  Property maintenance, development guidance, and ongoing support while your investment grows.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Sample Listings */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Premium Land Opportunities</h2>
+            <p className="text-xl text-muted-foreground">
+              {showUnlockedView ? 'Your personalized recommendations based on your preferences' : 'Sample listings - complete onboarding to unlock full details'}
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(showUnlockedView ? unlockedProperties : teaserProperties).map((property) => (
+              <LandPropertyCard 
+                key={property.id} 
+                property={property} 
+                showFullDetails={showUnlockedView}
+              />
+            ))}
+          </div>
+          
+          <div className="text-center mt-8">
+            {!showUnlockedView ? (
+              <Button 
+                size="lg" 
+                onClick={() => setShowOnboarding(true)}
+                className="bg-gradient-to-r from-primary to-primary/80 hover:scale-105 transition-transform"
+              >
+                Unlock All Details
+              </Button>
+            ) : (
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/map')}
+                className="hover:scale-105 transition-transform"
+              >
+                Explore All Properties on Map
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={handleOnboardingComplete}
+      />
+    </>
+  );
+}
