@@ -34,6 +34,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           <div className="flex items-center gap-4">
             <Link to="/about" className="hover:underline">About</Link>
             <Link to="/contact" className="hover:underline">Contact</Link>
+            <Link to="/admin" className="hover:underline text-xs opacity-70">Admin</Link>
           </div>
         </div>
       </footer>
