@@ -4,13 +4,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Users, MapPin, TrendingUp, Plus, Edit, Trash2, Eye, LogOut } from "lucide-react";
-import { landProperties } from "@/data/landProperties";
+import { BarChart, Users, MapPin, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, Search, Send } from "lucide-react";
+import { landProperties, LandProperty } from "@/data/landProperties";
 import { useNavigate } from "react-router-dom";
+import PropertyDetailModal from "@/components/PropertyDetailModal";
+import EditPropertyModal from "@/components/EditPropertyModal";
 
 const AdminDashboard = () => {
   const [properties, setProperties] = useState(landProperties);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<LandProperty | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [userSuggestions, setUserSuggestions] = useState<{[key: string]: string[]}>({
+    "arjun@example.com": [],
+    "priya@example.com": [],
+    "rohit@example.com": [],
+    "sneha@example.com": []
+  });
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -53,6 +64,36 @@ const AdminDashboard = () => {
     setProperties(prev => prev.filter(p => p.id !== id));
   };
 
+  const handlePropertySave = (property: LandProperty) => {
+    if (properties.find(p => p.id === property.id)) {
+      setProperties(prev => prev.map(p => p.id === property.id ? property : p));
+    } else {
+      setProperties(prev => [...prev, { ...property, id: Date.now().toString() }]);
+    }
+  };
+
+  const handleViewProperty = (property: LandProperty) => {
+    setSelectedProperty(property);
+    setShowDetailModal(true);
+  };
+
+  const handleEditProperty = (property: LandProperty) => {
+    setSelectedProperty(property);
+    setShowEditModal(true);
+  };
+
+  const handleAddProperty = () => {
+    setSelectedProperty(null);
+    setShowEditModal(true);
+  };
+
+  const suggestPropertyToUser = (userEmail: string, propertyId: string) => {
+    setUserSuggestions(prev => ({
+      ...prev,
+      [userEmail]: [...(prev[userEmail] || []), propertyId]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/10 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -68,7 +109,7 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button 
-              onClick={() => setShowAddForm(true)}
+              onClick={handleAddProperty}
               className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -150,7 +191,18 @@ const AdminDashboard = () => {
                           <p className="text-sm text-muted-foreground">{property.size}</p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewProperty(property)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditProperty(property)}
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button 
@@ -226,24 +278,66 @@ const AdminDashboard = () => {
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage user accounts and preferences</CardDescription>
+                <CardTitle>User Management & Property Suggestions</CardTitle>
+                <CardDescription>Manage user accounts and suggest properties</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {[
-                    { name: "Arjun Patel", email: "arjun@example.com", type: "Premium Investor" },
-                    { name: "Priya Shah", email: "priya@example.com", type: "Regular User" },
-                    { name: "Rohit Mehta", email: "rohit@example.com", type: "Corporate Client" },
-                    { name: "Sneha Desai", email: "sneha@example.com", type: "Premium Investor" }
+                    { name: "Arjun Patel", email: "arjun@example.com", type: "Premium Investor", preferences: "Agricultural, Budget: ₹2-5Cr" },
+                    { name: "Priya Shah", email: "priya@example.com", type: "Regular User", preferences: "Farmhouse, Budget: ₹50L-2Cr" },
+                    { name: "Rohit Mehta", email: "rohit@example.com", type: "Corporate Client", preferences: "Industrial, Budget: ₹5-20Cr" },
+                    { name: "Sneha Desai", email: "sneha@example.com", type: "Premium Investor", preferences: "Commercial, Budget: ₹3-10Cr" }
                   ].map((user, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-semibold">{user.name}</h3>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <Card key={idx} className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{user.name}</h3>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{user.preferences}</p>
+                          <Badge variant="outline" className="mt-2">{user.type}</Badge>
+                        </div>
                       </div>
-                      <Badge variant="outline">{user.type}</Badge>
-                    </div>
+                      
+                      <div className="space-y-3">
+                        <div className="text-sm font-medium">Suggested Properties:</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {properties.slice(0, 3).map((property) => (
+                            <div key={property.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+                              <div className="flex-1">
+                                <div className="font-medium">{property.title}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  ₹{(property.price / 100000).toFixed(1)}L - {property.location}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => suggestPropertyToUser(user.email, property.id)}
+                                disabled={userSuggestions[user.email]?.includes(property.id)}
+                              >
+                                {userSuggestions[user.email]?.includes(property.id) ? (
+                                  "Suggested"
+                                ) : (
+                                  <>
+                                    <Send className="w-3 h-3 mr-1" />
+                                    Suggest
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {userSuggestions[user.email]?.length > 0 && (
+                          <div className="mt-3 p-2 bg-green-50 rounded">
+                            <div className="text-xs font-medium text-green-800">
+                              {userSuggestions[user.email].length} properties suggested to this user
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
                   ))}
                 </div>
               </CardContent>
@@ -251,6 +345,20 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+      />
+      
+      <EditPropertyModal
+        property={selectedProperty}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handlePropertySave}
+      />
     </div>
   );
 };
