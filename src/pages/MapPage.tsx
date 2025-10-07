@@ -17,14 +17,12 @@ export default function MapPage() {
   const [viewMode, setViewMode] = useState<'properties' | 'landmarks'>('properties');
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<FiltersType>({
-    purpose: 'buy',
+    purpose: 'investment',
     propertyTypes: [],
-    budgetRange: [0, 50000000],
+    budgetRange: [0, 100000000],
     location: '',
-    size: 'any',
-    sqftRange: [0, 5000],
-    commute: '',
-    amenities: [],
+    sizeRange: [0, 100000],
+    features: [],
     aiSearch: ''
   });
 
@@ -259,14 +257,12 @@ export default function MapPage() {
 
   const clearFilters = () => {
     setFilters({
-      purpose: 'buy',
+      purpose: 'investment',
       propertyTypes: [],
-      budgetRange: [0, 50000000],
+      budgetRange: [0, 100000000],
       location: '',
-      size: 'any',
-      sqftRange: [0, 5000],
-      commute: '',
-      amenities: [],
+      sizeRange: [0, 100000],
+      features: [],
       aiSearch: ''
     });
   };

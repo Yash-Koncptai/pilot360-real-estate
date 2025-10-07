@@ -10,26 +10,22 @@ import { Separator } from '@/components/ui/separator';
 import { Search, MapPin, X, Star, Briefcase, Home, Building2 } from 'lucide-react';
 
 export type PropertyFilters = {
-  purpose: 'buy' | 'rent' | 'commercial' | 'investment';
+  purpose: 'self-use' | 'investment' | 'corporate';
   propertyTypes: string[];
   budgetRange: [number, number];
   location: string;
-  size: string;
-  sqftRange: [number, number];
-  commute: string;
-  amenities: string[];
+  sizeRange: [number, number];
+  features: string[];
   aiSearch: string;
 };
 
 const defaultFilters: PropertyFilters = {
-  purpose: 'buy',
+  purpose: 'investment',
   propertyTypes: [],
-  budgetRange: [0, 50000000],
+  budgetRange: [0, 100000000],
   location: '',
-  size: 'any',
-  sqftRange: [0, 5000],
-  commute: '',
-  amenities: [],
+  sizeRange: [0, 100000],
+  features: [],
   aiSearch: ''
 };
 
@@ -63,17 +59,16 @@ export default function PropertyFilters({
   };
 
   const propertyTypeOptions = [
-    { value: 'apartment', label: 'Apartment', icon: Building2 },
-    { value: 'villa', label: 'Villa', icon: Home },
-    { value: 'plot', label: 'Plot', icon: MapPin },
-    { value: 'office', label: 'Office', icon: Briefcase },
-    { value: 'shop', label: 'Shop', icon: Building2 },
-    { value: 'warehouse', label: 'Warehouse', icon: Building2 }
+    { value: 'Agricultural', label: 'Agricultural', icon: MapPin },
+    { value: 'Non-Agricultural', label: 'Non-Agricultural', icon: Building2 },
+    { value: 'Farmhouse', label: 'Farmhouse', icon: Home },
+    { value: 'Industrial', label: 'Industrial', icon: Building2 },
+    { value: 'Commercial', label: 'Commercial Land', icon: Briefcase },
   ];
 
-  const amenityOptions = [
-    'Gym', 'Pool', 'Parking', 'Security', 'Garden', 'Pet-friendly',
-    'Elevator', 'Power Backup', 'Clubhouse', 'Playground'
+  const featureOptions = [
+    'Water Access', 'Electricity', 'Road Access', 'Fenced', 'Clear Title',
+    'Approved Layout', 'Corner Plot', 'Gated Community', 'Highway Facing', 'Metro Connectivity'
   ];
 
   const togglePropertyType = (type: string) => {
@@ -83,11 +78,11 @@ export default function PropertyFilters({
     updateFilters({ propertyTypes: newTypes });
   };
 
-  const toggleAmenity = (amenity: string) => {
-    const newAmenities = filters.amenities.includes(amenity)
-      ? filters.amenities.filter(a => a !== amenity)
-      : [...filters.amenities, amenity];
-    updateFilters({ amenities: newAmenities });
+  const toggleFeature = (feature: string) => {
+    const newFeatures = filters.features.includes(feature)
+      ? filters.features.filter(a => a !== feature)
+      : [...filters.features, feature];
+    updateFilters({ features: newFeatures });
   };
 
   const formatBudget = (value: number) => {
@@ -115,7 +110,7 @@ export default function PropertyFilters({
           <div className="relative">
             <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="2BHK under ₹25k near SG Highway with parking"
+              placeholder="Agricultural land near Sanand under ₹50L"
               value={filters.aiSearch}
               onChange={(e) => updateFilters({ aiSearch: e.target.value })}
               className="pl-10"
@@ -131,17 +126,16 @@ export default function PropertyFilters({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="buy">Buy</SelectItem>
-              <SelectItem value="rent">Rent</SelectItem>
-              <SelectItem value="commercial">Commercial</SelectItem>
+              <SelectItem value="self-use">Self Use</SelectItem>
               <SelectItem value="investment">Investment</SelectItem>
+              <SelectItem value="corporate">Corporate</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Property Type */}
         <div className="space-y-3">
-          <label className="text-sm font-medium">Property Type</label>
+          <label className="text-sm font-medium">Land Type</label>
           <div className="grid grid-cols-2 gap-2">
             {propertyTypeOptions.map((option) => {
               const Icon = option.icon;
@@ -169,9 +163,9 @@ export default function PropertyFilters({
             <Slider
               value={filters.budgetRange}
               onValueChange={(value) => updateFilters({ budgetRange: value as [number, number] })}
-              max={50000000}
+              max={100000000}
               min={0}
-              step={100000}
+              step={500000}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
@@ -187,7 +181,7 @@ export default function PropertyFilters({
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Satellite, Bopal, SG Highway..."
+              placeholder="Ahmedabad, Gandhinagar, Sanand..."
               value={filters.location}
               onChange={(e) => updateFilters({ location: e.target.value })}
               className="pl-10"
@@ -195,72 +189,40 @@ export default function PropertyFilters({
           </div>
         </div>
 
-        {/* Size */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Size</label>
-          <Select value={filters.size} onValueChange={(v) => updateFilters({ size: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">Any Size</SelectItem>
-              <SelectItem value="1bhk">1 BHK</SelectItem>
-              <SelectItem value="2bhk">2 BHK</SelectItem>
-              <SelectItem value="3bhk">3 BHK</SelectItem>
-              <SelectItem value="4bhk">4+ BHK</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Square Feet Range */}
+        {/* Size Range */}
         <div className="space-y-3">
-          <label className="text-sm font-medium">Area (sq. ft.)</label>
+          <label className="text-sm font-medium">Land Size (sq. ft.)</label>
           <div className="px-2">
             <Slider
-              value={filters.sqftRange}
-              onValueChange={(value) => updateFilters({ sqftRange: value as [number, number] })}
-              max={5000}
+              value={filters.sizeRange}
+              onValueChange={(value) => updateFilters({ sizeRange: value as [number, number] })}
+              max={100000}
               min={0}
-              step={100}
+              step={1000}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
-              <span>{filters.sqftRange[0]} sq ft</span>
-              <span>{filters.sqftRange[1]} sq ft</span>
+              <span>{filters.sizeRange[0].toLocaleString()} sq ft</span>
+              <span>{filters.sizeRange[1].toLocaleString()} sq ft</span>
             </div>
           </div>
         </div>
 
-        {/* Commute */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Commute (Workplace/School)</label>
-          <Input
-            placeholder="Enter workplace or school address"
-            value={filters.commute}
-            onChange={(e) => updateFilters({ commute: e.target.value })}
-          />
-          {filters.commute && (
-            <p className="text-xs text-muted-foreground">
-              Will highlight properties within 30 mins commute
-            </p>
-          )}
-        </div>
-
         <Separator />
 
-        {/* Amenities */}
+        {/* Features */}
         <div className="space-y-3">
-          <label className="text-sm font-medium">Amenities</label>
+          <label className="text-sm font-medium">Features</label>
           <div className="grid grid-cols-2 gap-2">
-            {amenityOptions.map((amenity) => (
-              <div key={amenity} className="flex items-center space-x-2">
+            {featureOptions.map((feature) => (
+              <div key={feature} className="flex items-center space-x-2">
                 <Checkbox
-                  id={amenity}
-                  checked={filters.amenities.includes(amenity)}
-                  onCheckedChange={() => toggleAmenity(amenity)}
+                  id={feature}
+                  checked={filters.features.includes(feature)}
+                  onCheckedChange={() => toggleFeature(feature)}
                 />
-                <label htmlFor={amenity} className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  {amenity}
+                <label htmlFor={feature} className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  {feature}
                 </label>
               </div>
             ))}
