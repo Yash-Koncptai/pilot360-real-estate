@@ -1,10 +1,28 @@
 // import { useState } from "react";
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
 // import { Badge } from "@/components/ui/badge";
-// import { BarChart, Users, MapPin, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, Search, Send } from "lucide-react";
+// import {
+//   BarChart,
+//   Users,
+//   MapPin,
+//   TrendingUp,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   Eye,
+//   LogOut,
+//   Search,
+//   Send,
+// } from "lucide-react";
 // import { landProperties, LandProperty } from "@/data/landProperties";
 // import { useNavigate } from "react-router-dom";
 // import PropertyDetailModal from "@/components/PropertyDetailModal";
@@ -13,14 +31,18 @@
 // const AdminDashboard = () => {
 //   const [properties, setProperties] = useState(landProperties);
 //   const [showAddForm, setShowAddForm] = useState(false);
-//   const [selectedProperty, setSelectedProperty] = useState<LandProperty | null>(null);
+//   const [selectedProperty, setSelectedProperty] = useState<LandProperty | null>(
+//     null
+//   );
 //   const [showDetailModal, setShowDetailModal] = useState(false);
 //   const [showEditModal, setShowEditModal] = useState(false);
-//   const [userSuggestions, setUserSuggestions] = useState<{[key: string]: string[]}>({
+//   const [userSuggestions, setUserSuggestions] = useState<{
+//     [key: string]: string[];
+//   }>({
 //     "arjun@example.com": [],
 //     "priya@example.com": [],
 //     "rohit@example.com": [],
-//     "sneha@example.com": []
+//     "sneha@example.com": [],
 //   });
 //   const navigate = useNavigate();
 
@@ -35,40 +57,45 @@
 //       value: properties.length,
 //       icon: MapPin,
 //       change: "+12%",
-//       changeType: "positive" as const
+//       changeType: "positive" as const,
 //     },
 //     {
 //       title: "Available Properties",
-//       value: properties.filter(p => !p.isLocked).length,
+//       value: properties.filter((p) => !p.isLocked).length,
 //       icon: TrendingUp,
 //       change: "+8%",
-//       changeType: "positive" as const
+//       changeType: "positive" as const,
 //     },
 //     {
 //       title: "Total Views",
 //       value: "2,847",
 //       icon: Eye,
 //       change: "+23%",
-//       changeType: "positive" as const
+//       changeType: "positive" as const,
 //     },
 //     {
 //       title: "Inquiries",
 //       value: "156",
 //       icon: Users,
 //       change: "+5%",
-//       changeType: "positive" as const
-//     }
+//       changeType: "positive" as const,
+//     },
 //   ];
 
 //   const deleteProperty = (id: string) => {
-//     setProperties(prev => prev.filter(p => p.id !== id));
+//     setProperties((prev) => prev.filter((p) => p.id !== id));
 //   };
 
 //   const handlePropertySave = (property: LandProperty) => {
-//     if (properties.find(p => p.id === property.id)) {
-//       setProperties(prev => prev.map(p => p.id === property.id ? property : p));
+//     if (properties.find((p) => p.id === property.id)) {
+//       setProperties((prev) =>
+//         prev.map((p) => (p.id === property.id ? property : p))
+//       );
 //     } else {
-//       setProperties(prev => [...prev, { ...property, id: Date.now().toString() }]);
+//       setProperties((prev) => [
+//         ...prev,
+//         { ...property, id: Date.now().toString() },
+//       ]);
 //     }
 //   };
 
@@ -88,9 +115,9 @@
 //   };
 
 //   const suggestPropertyToUser = (userEmail: string, propertyId: string) => {
-//     setUserSuggestions(prev => ({
+//     setUserSuggestions((prev) => ({
 //       ...prev,
-//       [userEmail]: [...(prev[userEmail] || []), propertyId]
+//       [userEmail]: [...(prev[userEmail] || []), propertyId],
 //     }));
 //   };
 
@@ -129,7 +156,10 @@
 //         {/* Stats Grid */}
 //         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 //           {stats.map((stat) => (
-//             <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+//             <Card
+//               key={stat.title}
+//               className="hover:shadow-lg transition-shadow"
+//             >
 //               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 //                 <CardTitle className="text-sm font-medium text-muted-foreground">
 //                   {stat.title}
@@ -139,9 +169,16 @@
 //               <CardContent>
 //                 <div className="text-2xl font-bold">{stat.value}</div>
 //                 <p className="text-xs text-muted-foreground">
-//                   <span className={stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}>
+//                   <span
+//                     className={
+//                       stat.changeType === "positive"
+//                         ? "text-green-600"
+//                         : "text-red-600"
+//                     }
+//                   >
 //                     {stat.change}
-//                   </span> from last month
+//                   </span>{" "}
+//                   from last month
 //                 </p>
 //               </CardContent>
 //             </Card>
@@ -167,7 +204,10 @@
 //               <CardContent>
 //                 <div className="space-y-4">
 //                   {properties.map((property) => (
-//                     <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+//                     <div
+//                       key={property.id}
+//                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+//                     >
 //                       <div className="flex items-center space-x-4">
 //                         <img
 //                           src={property.images[0]}
@@ -176,10 +216,16 @@
 //                         />
 //                         <div>
 //                           <h3 className="font-semibold">{property.title}</h3>
-//                           <p className="text-sm text-muted-foreground">{property.location}</p>
+//                           <p className="text-sm text-muted-foreground">
+//                             {property.location}
+//                           </p>
 //                           <div className="flex items-center gap-2 mt-1">
 //                             <Badge variant="secondary">{property.type}</Badge>
-//                             <Badge variant={property.isLocked ? "destructive" : "default"}>
+//                             <Badge
+//                               variant={
+//                                 property.isLocked ? "destructive" : "default"
+//                               }
+//                             >
 //                               {property.isLocked ? "Private" : "Available"}
 //                             </Badge>
 //                           </div>
@@ -187,8 +233,12 @@
 //                       </div>
 //                       <div className="flex items-center gap-4">
 //                         <div className="text-right">
-//                           <p className="font-semibold">₹{(property.price / 100000).toFixed(1)}L</p>
-//                           <p className="text-sm text-muted-foreground">{property.size}</p>
+//                           <p className="font-semibold">
+//                             ₹{(property.price / 100000).toFixed(1)}L
+//                           </p>
+//                           <p className="text-sm text-muted-foreground">
+//                             {property.size}
+//                           </p>
 //                         </div>
 //                         <div className="flex gap-2">
 //                           <Button
@@ -226,7 +276,9 @@
 //               <Card>
 //                 <CardHeader>
 //                   <CardTitle>Property Performance</CardTitle>
-//                   <CardDescription>Views and inquiries by property type</CardDescription>
+//                   <CardDescription>
+//                     Views and inquiries by property type
+//                   </CardDescription>
 //                 </CardHeader>
 //                 <CardContent>
 //                   <div className="space-y-4">
@@ -253,7 +305,9 @@
 //               <Card>
 //                 <CardHeader>
 //                   <CardTitle>Monthly Trends</CardTitle>
-//                   <CardDescription>Property inquiries and views</CardDescription>
+//                   <CardDescription>
+//                     Property inquiries and views
+//                   </CardDescription>
 //                 </CardHeader>
 //                 <CardContent>
 //                   <div className="space-y-4">
@@ -267,7 +321,9 @@
 //                     </div>
 //                     <div className="flex justify-between items-center">
 //                       <span>Growth Rate</span>
-//                       <Badge variant="default" className="bg-green-500">+5.4%</Badge>
+//                       <Badge variant="default" className="bg-green-500">
+//                         +5.4%
+//                       </Badge>
 //                     </div>
 //                   </div>
 //                 </CardContent>
@@ -279,44 +335,86 @@
 //             <Card>
 //               <CardHeader>
 //                 <CardTitle>User Management & Property Suggestions</CardTitle>
-//                 <CardDescription>Manage user accounts and suggest properties</CardDescription>
+//                 <CardDescription>
+//                   Manage user accounts and suggest properties
+//                 </CardDescription>
 //               </CardHeader>
 //               <CardContent>
 //                 <div className="space-y-6">
 //                   {[
-//                     { name: "Arjun Patel", email: "arjun@example.com", type: "Premium Investor", preferences: "Agricultural, Budget: ₹2-5Cr" },
-//                     { name: "Priya Shah", email: "priya@example.com", type: "Regular User", preferences: "Farmhouse, Budget: ₹50L-2Cr" },
-//                     { name: "Rohit Mehta", email: "rohit@example.com", type: "Corporate Client", preferences: "Industrial, Budget: ₹5-20Cr" },
-//                     { name: "Sneha Desai", email: "sneha@example.com", type: "Premium Investor", preferences: "Commercial, Budget: ₹3-10Cr" }
+//                     {
+//                       name: "Arjun Patel",
+//                       email: "arjun@example.com",
+//                       type: "Premium Investor",
+//                       preferences: "Agricultural, Budget: ₹2-5Cr",
+//                     },
+//                     {
+//                       name: "Priya Shah",
+//                       email: "priya@example.com",
+//                       type: "Regular User",
+//                       preferences: "Farmhouse, Budget: ₹50L-2Cr",
+//                     },
+//                     {
+//                       name: "Rohit Mehta",
+//                       email: "rohit@example.com",
+//                       type: "Corporate Client",
+//                       preferences: "Industrial, Budget: ₹5-20Cr",
+//                     },
+//                     {
+//                       name: "Sneha Desai",
+//                       email: "sneha@example.com",
+//                       type: "Premium Investor",
+//                       preferences: "Commercial, Budget: ₹3-10Cr",
+//                     },
 //                   ].map((user, idx) => (
 //                     <Card key={idx} className="p-4">
 //                       <div className="flex items-start justify-between mb-4">
 //                         <div className="flex-1">
 //                           <h3 className="font-semibold">{user.name}</h3>
-//                           <p className="text-sm text-muted-foreground">{user.email}</p>
-//                           <p className="text-xs text-muted-foreground mt-1">{user.preferences}</p>
-//                           <Badge variant="outline" className="mt-2">{user.type}</Badge>
+//                           <p className="text-sm text-muted-foreground">
+//                             {user.email}
+//                           </p>
+//                           <p className="text-xs text-muted-foreground mt-1">
+//                             {user.preferences}
+//                           </p>
+//                           <Badge variant="outline" className="mt-2">
+//                             {user.type}
+//                           </Badge>
 //                         </div>
 //                       </div>
 
 //                       <div className="space-y-3">
-//                         <div className="text-sm font-medium">Suggested Properties:</div>
+//                         <div className="text-sm font-medium">
+//                           Suggested Properties:
+//                         </div>
 //                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 //                           {properties.slice(0, 3).map((property) => (
-//                             <div key={property.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+//                             <div
+//                               key={property.id}
+//                               className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm"
+//                             >
 //                               <div className="flex-1">
-//                                 <div className="font-medium">{property.title}</div>
+//                                 <div className="font-medium">
+//                                   {property.title}
+//                                 </div>
 //                                 <div className="text-xs text-muted-foreground">
-//                                   ₹{(property.price / 100000).toFixed(1)}L - {property.location}
+//                                   ₹{(property.price / 100000).toFixed(1)}L -{" "}
+//                                   {property.location}
 //                                 </div>
 //                               </div>
 //                               <Button
 //                                 size="sm"
 //                                 variant="outline"
-//                                 onClick={() => suggestPropertyToUser(user.email, property.id)}
-//                                 disabled={userSuggestions[user.email]?.includes(property.id)}
+//                                 onClick={() =>
+//                                   suggestPropertyToUser(user.email, property.id)
+//                                 }
+//                                 disabled={userSuggestions[user.email]?.includes(
+//                                   property.id
+//                                 )}
 //                               >
-//                                 {userSuggestions[user.email]?.includes(property.id) ? (
+//                                 {userSuggestions[user.email]?.includes(
+//                                   property.id
+//                                 ) ? (
 //                                   "Suggested"
 //                                 ) : (
 //                                   <>
@@ -332,7 +430,8 @@
 //                         {userSuggestions[user.email]?.length > 0 && (
 //                           <div className="mt-3 p-2 bg-green-50 rounded">
 //                             <div className="text-xs font-medium text-green-800">
-//                               {userSuggestions[user.email].length} properties suggested to this user
+//                               {userSuggestions[user.email].length} properties
+//                               suggested to this user
 //                             </div>
 //                           </div>
 //                         )}
@@ -373,7 +472,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -385,25 +484,363 @@ import {
   LogOut,
   TrendingUp,
   Users,
+  Send,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "@/components/ui/sonner";
 import PropertyDetailModal from "@/components/PropertyDetailModal";
 import EditPropertyModal from "@/components/EditPropertyModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface Property {
+  id: string;
+  title: string;
+  price: number;
+  type: string;
+  size: string;
+  primary_purpose: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  private: boolean;
+  features: string[] | null;
+  images: string[] | null;
+  views: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DashboardData {
+  properties: number;
+  available: number;
+  views: number;
+  inquiries: number;
+}
+
+interface AnalyticsData {
+  property_performance: {
+    Agricultural: number;
+    Residential: number;
+    Commercial: number;
+  };
+  monthly_trend: {
+    this_month: number;
+    last_month: number;
+    growth_rate: string;
+  };
+}
+
+interface User {
+  id: number;
+  name: string;
+  mobile: string;
+  email: string;
+  verification: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ScheduledVisit {
+  id: string;
+  userName: string;
+  email: string;
+  mobile?: string;
+  propertyId: string;
+  visitDate: string;
+  message: string;
+  user_id: number;
+  user: {
+    name: string;
+    email: string;
+  };
+  property: {
+    id: number;
+    title: string;
+    price: number;
+    type: string;
+    size: string;
+    primary_purpose: string;
+    location: string;
+  };
+}
+
+interface UserSuggestions {
+  [userId: number]: string[];
+}
 
 const AdminDashboard = () => {
-  const [properties, setProperties] = useState([]);
-  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null
+  );
+  const [users, setUsers] = useState<User[]>([]);
+  const [scheduledVisits, setScheduledVisits] = useState<ScheduledVisit[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(
+    null
+  );
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+  const [isPropertiesLoading, setIsPropertiesLoading] = useState(true);
+  const [userSuggestions, setUserSuggestions] = useState<UserSuggestions>({});
   const navigate = useNavigate();
 
-  // Fetch properties on mount
+  // Chart.js data configuration for monthly trend
+  const chartData = analyticsData
+    ? {
+        labels: ["This Month", "Last Month"],
+        datasets: [
+          {
+            label: "Monthly Views",
+            data: [
+              analyticsData.monthly_trend.this_month,
+              analyticsData.monthly_trend.last_month,
+            ],
+            backgroundColor: [
+              "rgba(75, 192, 192, 0.6)",
+              "rgba(54, 162, 235, 0.6)",
+            ],
+            borderColor: ["rgba(75, 192, 192, 1)", "rgba(54, 162, 235, 1)"],
+            borderWidth: 1,
+          },
+        ],
+      }
+    : null;
+
+  const chartOptions = {
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Views",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Period",
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+  };
+
+  // Check authentication on mount
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    const token = localStorage.getItem("adminToken");
+    if (!isAuthenticated || !token) {
+      localStorage.setItem(
+        "loginMessage",
+        "You are logged out. Please log in."
+      );
+      navigate("/admin", { replace: true });
+    }
+  }, [navigate]);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) return;
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/admin/dashboard",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Dashboard API response:", response.data);
+        if (response.data.success) {
+          setDashboardData({
+            properties: Number(response.data.properties),
+            available: Number(response.data.available),
+            views: Number(response.data.views),
+            inquiries: Number(response.data.inquiries),
+          });
+        } else {
+          console.error(
+            "Failed to fetch dashboard data:",
+            response.data.message
+          );
+          toast.error("Failed to fetch dashboard data.");
+        }
+      } catch (err: any) {
+        console.error(
+          "Error fetching dashboard data:",
+          err.response ? err.response.data : err.message
+        );
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.setItem(
+            "loginMessage",
+            "Session expired. Please log in again."
+          );
+          localStorage.removeItem("adminAuth");
+          localStorage.removeItem("adminToken");
+          navigate("/admin", { replace: true });
+        } else {
+          toast.error("Failed to fetch dashboard data. Please try again.");
+        }
+      }
+    };
+
+    fetchDashboardData();
+  }, [navigate]);
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) return;
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/admin/analytics",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Analytics API response:", response.data);
+        if (response.data.success) {
+          setAnalyticsData({
+            property_performance: {
+              Agricultural: response.data.property_performance.Agricultural,
+              Residential: response.data.property_performance.Residential,
+              Commercial: response.data.property_performance.Commercial,
+            },
+            monthly_trend: {
+              this_month: response.data.monthly_trend["This Month"],
+              last_month: response.data.monthly_trend["Last Month"],
+              growth_rate: response.data.monthly_trend["Growth Rate"],
+            },
+          });
+        } else {
+          console.error(
+            "Failed to fetch analytics data:",
+            response.data.message
+          );
+          toast.error("Failed to fetch analytics data.");
+        }
+      } catch (err: any) {
+        console.error(
+          "Error fetching analytics data:",
+          err.response ? err.response.data : err.message
+        );
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.setItem(
+            "loginMessage",
+            "Session expired. Please log in again."
+          );
+          localStorage.removeItem("adminAuth");
+          localStorage.removeItem("adminToken");
+          navigate("/admin", { replace: true });
+        } else {
+          toast.error("Failed to fetch analytics data. Please try again.");
+        }
+      }
+    };
+
+    fetchAnalyticsData();
+  }, [navigate]);
+
+  // Fetch users data
+  useEffect(() => {
+    const fetchUsersData = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) return;
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/admin/users",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Users API response:", response.data);
+        if (response.data.success) {
+          setUsers(response.data.users);
+          const initialSuggestions: UserSuggestions = {};
+          response.data.users.forEach((user: User) => {
+            initialSuggestions[user.id] = [];
+          });
+          setUserSuggestions(initialSuggestions);
+        } else {
+          console.error("Failed to fetch users data:", response.data.message);
+          toast.error("Failed to fetch users data.");
+        }
+      } catch (err: any) {
+        console.error(
+          "Error fetching users data:",
+          err.response ? err.response.data : err.message
+        );
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.setItem(
+            "loginMessage",
+            "Session expired. Please log in again."
+          );
+          localStorage.removeItem("adminAuth");
+          localStorage.removeItem("adminToken");
+          navigate("/admin", { replace: true });
+        } else {
+          toast.error("Failed to fetch users data. Please try again.");
+        }
+      }
+    };
+
+    fetchUsersData();
+  }, [navigate]);
+
+  // Fetch properties data
   useEffect(() => {
     const fetchProperties = async () => {
+      setIsPropertiesLoading(true);
       const token = localStorage.getItem("adminToken");
       if (!token) {
-        console.error("No authentication token found");
+        console.error("No admin token found, redirecting to login.");
+        localStorage.setItem(
+          "loginMessage",
+          "You are logged out. Please log in."
+        );
+        navigate("/admin", { replace: true });
+        setIsPropertiesLoading(false);
         return;
       }
       try {
@@ -416,28 +853,200 @@ const AdminDashboard = () => {
             },
           }
         );
+        console.log("Properties API response:", response.data);
         if (response.data.success) {
-          setProperties(response.data.properties);
+          if (Array.isArray(response.data.properties)) {
+            setProperties(response.data.properties);
+            console.log("Properties set:", response.data.properties);
+          } else {
+            console.error(
+              "Properties data is not an array:",
+              response.data.properties
+            );
+            setProperties([]);
+            toast.error("Invalid properties data format.");
+          }
+        } else {
+          console.error("Failed to fetch properties:", response.data.message);
+          toast.error("Failed to fetch properties: " + response.data.message);
+          setProperties([]);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(
           "Error fetching properties:",
           err.response ? err.response.data : err.message
         );
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.setItem(
+            "loginMessage",
+            "Session expired. Please log in again."
+          );
+          localStorage.removeItem("adminAuth");
+          localStorage.removeItem("adminToken");
+          navigate("/admin", { replace: true });
+        } else {
+          toast.error("Failed to fetch properties. Please try again.");
+          setProperties([]);
+        }
+      } finally {
+        setIsPropertiesLoading(false);
       }
     };
     fetchProperties();
-  }, []);
+  }, [navigate]);
+
+  // Fetch inquiries data
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        console.error("No admin token found, redirecting to login.");
+        localStorage.setItem(
+          "loginMessage",
+          "You are logged out. Please log in."
+        );
+        navigate("/admin", { replace: true });
+        return;
+      }
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/admin/inquiries",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Inquiries API response:", response.data);
+        if (response.data.success) {
+          const inquiries = response.data.inquiries.map((inquiry: any) => ({
+            id: inquiry.id.toString(),
+            userName: inquiry.user.name,
+            email: inquiry.email,
+            mobile: inquiry.mobile || "N/A", // Fallback if mobile is not provided
+            propertyId: inquiry.property_id.toString(),
+            visitDate: inquiry.visit_date,
+            message: inquiry.message,
+            user_id: inquiry.user_id,
+            user: {
+              name: inquiry.user.name,
+              email: inquiry.user.email,
+            },
+            property: {
+              id: inquiry.property.id,
+              title: inquiry.property.title,
+              price: inquiry.property.price,
+              type: inquiry.property.type,
+              size: inquiry.property.size,
+              primary_purpose: inquiry.property.primary_purpose,
+              location: inquiry.property.location,
+            },
+          }));
+          setScheduledVisits(inquiries);
+        } else {
+          console.error("Failed to fetch inquiries:", response.data.message);
+          toast.error("Failed to fetch inquiries: " + response.data.message);
+          setScheduledVisits([]);
+        }
+      } catch (err: any) {
+        console.error(
+          "Error fetching inquiries:",
+          err.response ? err.response.data : err.message
+        );
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.setItem(
+            "loginMessage",
+            "Session expired. Please log in again."
+          );
+          localStorage.removeItem("adminAuth");
+          localStorage.removeItem("adminToken");
+          navigate("/admin", { replace: true });
+        } else {
+          toast.error("Failed to fetch inquiries. Please try again.");
+          setScheduledVisits([]);
+        }
+      }
+    };
+    fetchInquiries();
+  }, [navigate]);
+
+  // Suggest property to user
+  const suggestPropertyToUser = async (userId: number, propertyId: string) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      localStorage.setItem(
+        "loginMessage",
+        "You are logged out. Please log in."
+      );
+      navigate("/admin", { replace: true });
+      return;
+    }
+    try {
+      setUserSuggestions((prev) => ({
+        ...prev,
+        [userId]: [...(prev[userId] || []), propertyId],
+      }));
+      const response = await axios.post(
+        "http://localhost:5000/api/admin/suggestions",
+        { user_id: userId, property_id: Number(propertyId) },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Suggest property response:", response.data);
+      if (response.data.success) {
+        toast.success("Property suggested successfully");
+      } else {
+        console.error("Failed to suggest property:", response.data.message);
+        toast.error("Failed to suggest property: " + response.data.message);
+        setUserSuggestions((prev) => ({
+          ...prev,
+          [userId]: prev[userId].filter((id) => id !== propertyId),
+        }));
+      }
+    } catch (err: any) {
+      console.error(
+        "Error suggesting property:",
+        err.response ? err.response.data : err.message
+      );
+      const errorMessage =
+        err.response?.status === 400
+          ? "Missing required fields for suggestion."
+          : err.response?.status === 404
+          ? "User or property not found."
+          : "Failed to suggest property. Please try again.";
+      toast.error(errorMessage);
+      setUserSuggestions((prev) => ({
+        ...prev,
+        [userId]: prev[userId].filter((id) => id !== propertyId),
+      }));
+    }
+  };
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.removeItem("adminAuth");
-    navigate("/admin");
+    localStorage.removeItem("adminToken");
+    localStorage.setItem("loginMessage", "You have successfully logged out.");
+    setShowLogoutModal(false);
+    navigate("/admin", { replace: true });
   };
 
   const deleteProperty = async (id: string) => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
-      console.error("No authentication token found");
+      localStorage.setItem(
+        "loginMessage",
+        "You are logged out. Please log in."
+      );
+      navigate("/admin", { replace: true });
       return;
     }
 
@@ -451,24 +1060,83 @@ const AdminDashboard = () => {
           },
         }
       );
+      console.log("Delete property response:", response.data);
       if (response.data.success) {
         setProperties((prev) => prev.filter((p) => p.id !== id));
-        console.log("Property deleted successfully:", response.data.message);
+        setDashboardData((prev) =>
+          prev
+            ? {
+                ...prev,
+                properties: prev.properties - 1,
+                available:
+                  prev.available -
+                  (properties.find((p) => p.id === id)?.private ? 0 : 1),
+                views:
+                  prev.views -
+                  (properties.find((p) => p.id === id)?.views || 0),
+              }
+            : prev
+        );
+        const analyticsResponse = await axios.get(
+          "http://localhost:5000/api/admin/analytics",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (analyticsResponse.data.success) {
+          setAnalyticsData({
+            property_performance: {
+              Agricultural:
+                analyticsResponse.data.property_performance.Agricultural,
+              Residential:
+                analyticsResponse.data.property_performance.Residential,
+              Commercial:
+                analyticsResponse.data.property_performance.Commercial,
+            },
+            monthly_trend: {
+              this_month: analyticsResponse.data.monthly_trend["This Month"],
+              last_month: analyticsResponse.data.monthly_trend["Last Month"],
+              growth_rate: analyticsResponse.data.monthly_trend["Growth Rate"],
+            },
+          });
+        }
+        toast.success("Property deleted successfully");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(
         "Error deleting property:",
         err.response ? err.response.data : err.message
       );
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.setItem(
+          "loginMessage",
+          "Session expired. Please log in again."
+        );
+        localStorage.removeItem("adminAuth");
+        localStorage.removeItem("adminToken");
+        navigate("/admin", { replace: true });
+      } else {
+        toast.error("Failed to delete property. Please try again.");
+      }
     }
   };
 
-  const handleViewProperty = (property: any) => {
+  const confirmDelete = async () => {
+    if (showDeleteModal) {
+      await deleteProperty(showDeleteModal);
+      setShowDeleteModal(null);
+    }
+  };
+
+  const handleViewProperty = (property: Property) => {
     setSelectedProperty(property);
     setShowDetailModal(true);
   };
 
-  const handleEditProperty = (property: any) => {
+  const handleEditProperty = (property: Property) => {
     setSelectedProperty(property);
     setShowEditModal(true);
   };
@@ -478,78 +1146,201 @@ const AdminDashboard = () => {
     setShowEditModal(true);
   };
 
-  const handlePropertySave = async (formData: any) => {
+  const handlePropertySave = async (
+    formData: Property & {
+      images: File[] | string[] | null;
+      existingImages?: string[] | null;
+      deletedImages?: string[] | null;
+    }
+  ) => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
-      console.error("No authentication token found");
-      return;
+      localStorage.setItem(
+        "loginMessage",
+        "You are logged out. Please log in."
+      );
+      navigate("/admin", { replace: true });
+      throw new Error("No authentication token found");
     }
 
     try {
+      const payload = new FormData();
+      payload.append("title", formData.title);
+      payload.append("price", formData.price.toString());
+      payload.append("type", formData.type);
+      payload.append("size", formData.size);
+      payload.append("primary_purpose", formData.primary_purpose);
+      payload.append("location", formData.location);
+      payload.append("latitude", formData.latitude.toString());
+      payload.append("longitude", formData.longitude.toString());
+      payload.append("description", formData.description);
+      payload.append("privacy", formData.private.toString());
+      if (formData.features && formData.features.length) {
+        payload.append("features", formData.features.join(","));
+      }
+
+      if (formData.images && Array.isArray(formData.images)) {
+        formData.images.forEach((image) => {
+          if (image instanceof File) {
+            payload.append("images", image);
+          }
+        });
+      }
+
+      if (formData.id && formData.existingImages) {
+        payload.append("existingimages", formData.existingImages.join(","));
+      }
+      if (formData.id && formData.deletedImages) {
+        payload.append("deletedimages", formData.deletedImages.join(","));
+      }
+
       if (formData.id) {
-        // Update existing property
         const response = await axios.put(
           `http://localhost:5000/api/admin/property/update?id=${formData.id}`,
-          {
-            title: formData.title,
-            price: Number(formData.price),
-            type: formData.type,
-            size: formData.size,
-            location: formData.location,
-            latitude: Number(formData.latitude),
-            longitude: Number(formData.longitude),
-            description: formData.description,
-            privacy: formData.privacy,
-            features: formData.features.length ? formData.features : null,
-          },
+          payload,
           {
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
           }
         );
+        console.log("Update property response:", response.data);
         if (response.data.success) {
           setProperties((prev) =>
             prev.map((p) => (p.id === formData.id ? response.data.property : p))
           );
-          console.log("Property updated successfully:", response.data.property);
+          const dashboardResponse = await axios.get(
+            "http://localhost:5000/api/admin/dashboard",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (dashboardResponse.data.success) {
+            setDashboardData({
+              properties: Number(dashboardResponse.data.properties),
+              available: Number(dashboardResponse.data.available),
+              views: Number(dashboardResponse.data.views),
+              inquiries: Number(dashboardResponse.data.inquiries),
+            });
+          }
+          const analyticsResponse = await axios.get(
+            "http://localhost:5000/api/admin/analytics",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (analyticsResponse.data.success) {
+            setAnalyticsData({
+              property_performance: {
+                Agricultural:
+                  analyticsResponse.data.property_performance.Agricultural,
+                Residential:
+                  analyticsResponse.data.property_performance.Residential,
+                Commercial:
+                  analyticsResponse.data.property_performance.Commercial,
+              },
+              monthly_trend: {
+                this_month: analyticsResponse.data.monthly_trend["This Month"],
+                last_month: analyticsResponse.data.monthly_trend["Last Month"],
+                growth_rate:
+                  analyticsResponse.data.monthly_trend["Growth Rate"],
+              },
+            });
+          }
+          toast.success("Property updated successfully");
         }
       } else {
-        // Add new property
         const response = await axios.post(
           "http://localhost:5000/api/admin/property/add",
-          {
-            title: formData.title,
-            price: Number(formData.price),
-            type: formData.type,
-            size: formData.size,
-            location: formData.location,
-            latitude: Number(formData.latitude),
-            longitude: Number(formData.longitude),
-            description: formData.description,
-            privacy: formData.privacy,
-            features: formData.features.length ? formData.features : null,
-          },
+          payload,
           {
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
           }
         );
+        console.log("Add property response:", response.data);
         if (response.data.success) {
           setProperties((prev) => [...prev, response.data.property]);
-          console.log("Property added successfully:", response.data.property);
+          setDashboardData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  properties: prev.properties + 1,
+                  available: prev.available + (formData.private ? 0 : 1),
+                  views: prev.views + (response.data.property.views || 0),
+                }
+              : prev
+          );
+          const analyticsResponse = await axios.get(
+            "http://localhost:5000/api/admin/analytics",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (analyticsResponse.data.success) {
+            setAnalyticsData({
+              property_performance: {
+                Agricultural:
+                  analyticsResponse.data.property_performance.Agricultural,
+                Residential:
+                  analyticsResponse.data.property_performance.Residential,
+                Commercial:
+                  analyticsResponse.data.property_performance.Commercial,
+              },
+              monthly_trend: {
+                this_month: analyticsResponse.data.monthly_trend["This Month"],
+                last_month: analyticsResponse.data.monthly_trend["Last Month"],
+                growth_rate:
+                  analyticsResponse.data.monthly_trend["Growth Rate"],
+              },
+            });
+          }
+          toast.success("Property added successfully");
         }
       }
       setShowEditModal(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(
         "Error saving property:",
         err.response ? err.response.data : err.message
       );
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.setItem(
+          "loginMessage",
+          "Session expired. Please log in again."
+        );
+        localStorage.removeItem("adminAuth");
+        localStorage.removeItem("adminToken");
+        navigate("/admin", { replace: true });
+      }
+      throw err;
     }
+  };
+
+  // Format price for display
+  const formatPriceDisplay = (value: number) => {
+    return (value / 100000).toFixed(1) + "L";
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -586,66 +1377,72 @@ const AdminDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Properties
-              </CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{properties.length}</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Available Properties
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {properties.filter((p) => !p.private).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Views
-              </CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                To be fetched from backend
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Inquiries
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                To be fetched from backend
-              </p>
-            </CardContent>
-          </Card>
+          {[
+            {
+              title: "Total Properties",
+              value: dashboardData?.properties || 0,
+              icon: MapPin,
+              change: dashboardData ? "+12%" : "0%",
+              changeType: "positive" as const,
+            },
+            {
+              title: "Available Properties",
+              value: dashboardData?.available || 0,
+              icon: TrendingUp,
+              change: dashboardData ? "+8%" : "0%",
+              changeType: "positive" as const,
+            },
+            {
+              title: "Total Views",
+              value: dashboardData?.views || 0,
+              icon: Eye,
+              change: dashboardData ? "+23%" : "0%",
+              changeType: "positive" as const,
+            },
+            {
+              title: "Inquiries",
+              value: dashboardData?.inquiries || 0,
+              icon: Users,
+              change: dashboardData ? "+5%" : "0%",
+              changeType: "positive" as const,
+            },
+          ].map((stat) => (
+            <Card
+              key={stat.title}
+              className="hover:shadow-lg transition-shadow"
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span
+                    className={
+                      stat.changeType === "positive"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {stat.change}
+                  </span>{" "}
+                  from last month
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Main Content */}
         <Tabs defaultValue="properties" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="properties">Properties</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="visits">Schedule Visit</TabsTrigger>
           </TabsList>
 
           <TabsContent value="properties" className="space-y-6">
@@ -657,107 +1454,343 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {properties.map((property) => (
-                    <div
-                      key={property.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <img
-                          src={
-                            property.images && property.images.length
-                              ? property.images[0]
-                              : ""
-                          }
-                          alt={property.title}
-                          className="w-16 h-16 rounded object-cover"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{property.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {property.location}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary">{property.type}</Badge>
-                            <Badge
-                              variant={
-                                property.private ? "destructive" : "default"
-                              }
+                {isPropertiesLoading ? (
+                  <p className="text-muted-foreground">Loading properties...</p>
+                ) : properties.length > 0 ? (
+                  <div className="space-y-4">
+                    {properties.map((property) => (
+                      <div
+                        key={property.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <img
+                            src={
+                              property.images && property.images.length > 0
+                                ? `http://localhost:5000/${property.images[0]}`
+                                : "https://via.placeholder.com/64"
+                            }
+                            alt={property.title}
+                            className="w-16 h-16 rounded object-cover"
+                            onError={(e) => {
+                              console.error(
+                                "Image load failed:",
+                                e.currentTarget.src
+                              );
+                              e.currentTarget.src =
+                                "https://via.placeholder.com/64";
+                            }}
+                          />
+                          <div>
+                            <h3 className="font-semibold">{property.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {property.location}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="secondary">{property.type}</Badge>
+                              <Badge
+                                variant={
+                                  property.private ? "destructive" : "default"
+                                }
+                              >
+                                {property.private ? "Private" : "Available"}
+                              </Badge>
+                              <Badge variant="outline">
+                                {property.primary_purpose}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-semibold">
+                              ₹{formatPriceDisplay(property.price || 0)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {property.size}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewProperty(property)}
                             >
-                              {property.private ? "Private" : "Available"}
-                            </Badge>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditProperty(property)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowDeleteModal(property.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="font-semibold">
-                            ₹{property.price || 0}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {property.size}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewProperty(property)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditProperty(property)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteProperty(property.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No properties found.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics</CardTitle>
-                <CardDescription>
-                  Property performance and trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Analytics data to be fetched from backend in future updates.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Performance</CardTitle>
+                  <CardDescription>
+                    Views and inquiries by property type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData ? (
+                    <div className="space-y-4">
+                      {[
+                        {
+                          type: "Agricultural",
+                          views:
+                            analyticsData.property_performance.Agricultural,
+                        },
+                        {
+                          type: "Residential",
+                          views: analyticsData.property_performance.Residential,
+                        },
+                        {
+                          type: "Commercial",
+                          views: analyticsData.property_performance.Commercial,
+                        },
+                      ].map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center"
+                        >
+                          <span>{item.type}</span>
+                          <Badge>{item.views} views</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Loading analytics data...
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Trends</CardTitle>
+                  <CardDescription>
+                    Property inquiries and views
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span>This Month</span>
+                        <Badge variant="default">
+                          {analyticsData.monthly_trend.this_month} views
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Last Month</span>
+                        <Badge variant="secondary">
+                          {analyticsData.monthly_trend.last_month} views
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Growth Rate</span>
+                        <Badge
+                          variant="default"
+                          className={
+                            analyticsData.monthly_trend.growth_rate.startsWith(
+                              "+"
+                            )
+                              ? "bg-green-500"
+                              : "bg-red-500"
+                          }
+                        >
+                          {analyticsData.monthly_trend.growth_rate}
+                        </Badge>
+                      </div>
+                      <div style={{ height: "300px", width: "100%" }}>
+                        <Bar data={chartData} options={chartOptions} />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Loading monthly trends...
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>User Management & Property Suggestions</CardTitle>
                 <CardDescription>
-                  Manage users and property suggestions
+                  Manage user accounts and suggest properties
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  User management to be implemented with backend data.
-                </p>
+                {users.length > 0 ? (
+                  <div className="space-y-6">
+                    {users.map((user) => (
+                      <Card key={user.id} className="p-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{user.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {user.email}
+                            </p>
+                            <Badge variant="outline" className="mt-2">
+                              {user.verification
+                                ? "Verified User"
+                                : "Regular User"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">
+                            Suggested Properties:
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {properties.slice(0, 3).map((property) => (
+                              <div
+                                key={property.id}
+                                className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm"
+                              >
+                                <div className="flex-1">
+                                  <div className="font-medium">
+                                    {property.title}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    ₹{formatPriceDisplay(property.price)} -{" "}
+                                    {property.location}
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    suggestPropertyToUser(user.id, property.id)
+                                  }
+                                  disabled={userSuggestions[user.id]?.includes(
+                                    property.id
+                                  )}
+                                >
+                                  {userSuggestions[user.id]?.includes(
+                                    property.id
+                                  ) ? (
+                                    "Suggested"
+                                  ) : (
+                                    <>
+                                      <Send className="w-3 h-3 mr-1" />
+                                      Suggest
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          {userSuggestions[user.id]?.length > 0 && (
+                            <div className="mt-3 p-2 bg-green-50 rounded">
+                              <div className="text-xs font-medium text-green-800">
+                                {userSuggestions[user.id].length} properties
+                                suggested to this user
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    No users found or loading user data...
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="visits" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Scheduled Visits</CardTitle>
+                <CardDescription>
+                  View scheduled property visits
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scheduledVisits.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            User Name
+                          </th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            Email
+                          </th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            Phone Number
+                          </th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            Property
+                          </th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            Scheduled Date
+                          </th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                            Message
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scheduledVisits.map((visit) => (
+                          <tr
+                            key={visit.id}
+                            className="border-b hover:bg-muted/50"
+                          >
+                            <td className="py-2 px-4">{visit.userName}</td>
+                            <td className="py-2 px-4">{visit.email}</td>
+                            <td className="py-2 px-4">
+                              {visit.mobile || "N/A"}
+                            </td>
+                            <td className="py-2 px-4">
+                              {visit.property.title}
+                            </td>
+                            <td className="py-2 px-4">
+                              {formatDate(visit.visitDate)}
+                            </td>
+                            <td className="py-2 px-4">{visit.message}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    No scheduled visits found.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -775,6 +1808,27 @@ const AdminDashboard = () => {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSave={handlePropertySave}
+      />
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        description="Are you sure you want to log out?"
+        confirmText="Logout"
+        cancelText="Cancel"
+      />
+      <ConfirmationModal
+        isOpen={!!showDeleteModal}
+        onClose={() => setShowDeleteModal(null)}
+        onConfirm={confirmDelete}
+        title="Confirm Delete"
+        description={`Are you sure you want to delete '${
+          properties.find((p) => p.id === showDeleteModal)?.title ||
+          "this property"
+        }'? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </div>
   );
