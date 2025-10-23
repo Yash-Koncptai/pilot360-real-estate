@@ -263,6 +263,18 @@ export type LandProperty = {
   description: string;
   views: number;
   matchPercentage: number;
+  primary_purpose?: string;
+  water_connectivity?: boolean;
+  electricity_connectivity?: boolean;
+  gas_connectivity?: boolean;
+  investment_gain?: number;
+  return_of_investment?: number;
+  market_risk?: boolean;
+  regulatory_risk?: boolean;
+  financial_risk?: boolean;
+  liquidity_risk?: boolean;
+  physical_risk?: boolean;
+  risk_percentage?: number;
   createdAt: string;
   updatedAt: string;
   aiInsights?: {
@@ -277,6 +289,52 @@ export type LandProperty = {
   };
 };
 
+export type Property = {
+  id: number;
+  title: string;
+  price: number;
+  type:
+    | "Agricultural"
+    | "Non-Agricultural"
+    | "Farmhouse"
+    | "Industrial"
+    | "Commercial";
+  size: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  images: string[];
+  private: boolean;
+  amenities: string[]; // Maps to features
+  description: string;
+  views: number;
+  matchPercentage?: number;
+  primary_purpose?: string;
+  water_connectivity?: boolean;
+  electricity_connectivity?: boolean;
+  gas_connectivity?: boolean;
+  investment_gain?: number;
+  return_of_investment?: number;
+  market_risk?: boolean;
+  regulatory_risk?: boolean;
+  financial_risk?: boolean;
+  liquidity_risk?: boolean;
+  physical_risk?: boolean;
+  risk_percentage?: number;
+  floorplan?: string; // Added for PropertyDetails.tsx
+  createdAt: string;
+  updatedAt: string;
+  aiInsights?: {
+    matchScore?: number;
+    growthPotential: "Low" | "Medium" | "High";
+    expectedROI: string;
+    riskLevel: "Low" | "Medium" | "High";
+    demandIndicators: {
+      viewsThisWeek: number;
+      nearbyDevelopments: string[];
+    };
+  };
+};
 // Location-based heatmap data for land prices
 export const landHeatmapData = [
   {
