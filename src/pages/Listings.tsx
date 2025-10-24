@@ -668,71 +668,61 @@ export default function Listings() {
           >
             List
           </Button>
-          <Button asChild disabled={loading}>
+          <Button asChild>
             <Link to="/map">Map view</Link>
           </Button>
         </div>
       </section>
 
       <section className="mt-6">
-        {filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground">
-            No properties match your filters. Try adjusting your search.
-          </p>
-        ) : (
-          <div
-            className={
-              view === "grid"
-                ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid gap-4"
-            }
-          >
-            {filtered.map((p) => (
-              <div
-                key={p.id}
-                className={
-                  view === "grid"
-                    ? ""
-                    : "grid grid-cols-1 sm:grid-cols-3 items-stretch gap-4 p-4 rounded-lg border"
-                }
-              >
-                {view === "grid" ? (
-                  <PropertyCard
-                    property={p}
-                    setAuthModalOpen={setAuthModalOpen}
-                    setTargetPropertyId={setTargetPropertyId}
+        <div
+          className={
+            view === "grid"
+              ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              : "grid gap-4"
+          }
+        >
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              className={
+                view === "grid"
+                  ? ""
+                  : "grid grid-cols-1 sm:grid-cols-3 items-stretch gap-4 p-4 rounded-lg border"
+              }
+            >
+              {view === "grid" ? (
+                <PropertyCard
+                  property={p}
+                  setAuthModalOpen={setAuthModalOpen}
+                  setTargetPropertyId={setTargetPropertyId}
+                />
+              ) : (
+                <>
+                  <img
+                    src={`http://localhost:5000/${p.images[0]}`}
+                    alt={`${p.title}`}
+                    className="w-full h-40 object-cover rounded-md"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/placeholder.svg";
+                      console.error(
+                        `Failed to load image for ${p.title}: ${target.src}`
+                      );
+                    }}
                   />
-                ) : (
-                  <>
-                    <img
-                      src={
-                        p.images[0].startsWith("http")
-                          ? p.images[0]
-                          : `${api.defaults.baseURL}/${p.images[0] || "/placeholder.svg"}`
-                      }
-                      alt={`${p.title}`}
-                      className="w-full h-40 object-cover rounded-md"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/placeholder.svg";
-                        console.error(
-                          `Failed to load image for ${p.title}: ${target.src}`
-                        );
-                      }}
+                  <div className="sm:col-span-2 flex flex-col justify-between">
+                    <PropertyCard
+                      property={p}
+                      setAuthModalOpen={setAuthModalOpen}
+                      setTargetPropertyId={setTargetPropertyId}
                     />
-                    <div className="sm:col-span-2 flex flex-col justify-between">
-                      <PropertyCard
-                        property={p}
-                        setAuthModalOpen={setAuthModalOpen}
-                        setTargetPropertyId={setTargetPropertyId}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
