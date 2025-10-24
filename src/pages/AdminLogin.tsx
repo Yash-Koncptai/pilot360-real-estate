@@ -1,25 +1,94 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
 import { Lock, Shield } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import api from "@/utils/api";
 
 const AdminLogin = () => {
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check for login message in localStorage
+    const loginMessage = localStorage.getItem("loginMessage");
+    if (loginMessage) {
+      setMessage(loginMessage);
+      localStorage.removeItem("loginMessage"); // Clear the message after displaying
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Mock authentication - in real app this would be backend validation
-    if (credentials.username === "admin" && credentials.password === "admin123") {
-      localStorage.setItem("adminAuth", "true");
-      navigate("/admin/dashboard");
-    } else {
-      setError("Invalid credentials. Use admin/admin123");
+    setError("");
+    setMessage("");
+    setIsLoading(true);
+
+    try {
+      console.log("Sending request to: /api/admin/login");
+      console.log("Request payload:", {
+        username: credentials.username,
+        password: credentials.password,
+      });
+      const response = await api.post("/api/admin/login", {
+        username: credentials.username,
+        password: credentials.password,
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Login API response:", response.data);
+
+      if (response.data.success) {
+        localStorage.setItem("adminAuth", "true");
+        localStorage.setItem("adminToken", response.data.token);
+        setMessage(response.data.message || "Login successful.");
+        // Redirect to the intended route or dashboard
+        const from = location.state?.from?.pathname || "/admin/dashboard";
+        navigate(from, { replace: true });
+      } else {
+        console.error("Login failed:", response.data.message);
+        setError(response.data.message || "Invalid credentials.");
+      }
+    } catch (err: any) {
+      console.error("Login error details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+        url: err.config?.url,
+        baseURL: api.defaults.baseURL,
+      });
+      localStorage.removeItem("adminAuth");
+      localStorage.removeItem("adminToken");
+      if (err.response?.status === 404) {
+        setError("Login endpoint not found at /api/admin/login. Please verify the backend endpoint.");
+      } else if (err.response?.status === 400) {
+        setError("Invalid credentials or missing fields.");
+      } else if (err.response?.status === 401) {
+        setError("Unauthorized. Please check your username and password.");
+      } else {
+        setError(err.response?.data?.message || "Failed to login. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -46,8 +115,14 @@ const AdminLogin = () => {
                 type="text"
                 placeholder="Enter username"
                 value={credentials.username}
-                onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
+                onChange={(e) =>
+                  setCredentials((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
+                }
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -57,29 +132,36 @@ const AdminLogin = () => {
                 type="password"
                 placeholder="Enter password"
                 value={credentials.password}
-                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                onChange={(e) =>
+                  setCredentials((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
                 required
+                disabled={isLoading}
               />
             </div>
-            
+
             {error && (
               <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
                 {error}
               </div>
             )}
-            
-            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              <strong>Demo Credentials:</strong><br />
-              Username: admin<br />
-              Password: admin123
-            </div>
 
-            <Button 
-              type="submit" 
+            {message && (
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {message}
+              </div>
+            )}
+
+            <Button
+              type="submit"
               className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+              disabled={isLoading}
             >
               <Lock className="w-4 h-4 mr-2" />
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
         </CardContent>

@@ -1,81 +1,741 @@
+
+// import Seo from "@/components/Seo";
+// import { Property } from "@/data/properties";
+// import PropertyCard from "@/components/PropertyCard";
+// import { useMemo, useState, useEffect } from "react";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { Button } from "@/components/ui/button";
+// import { useSearchParams, Link, useNavigate } from "react-router-dom";
+// import { toast } from "sonner";
+// import axios from "axios";
+// import AuthModal from "@/components/AuthModal";
+
+// export default function Listings() {
+//   const [params] = useSearchParams();
+//   const navigate = useNavigate();
+//   const [location, setLocation] = useState(params.get("location") || "");
+//   const [primaryPurpose, setPrimaryPurpose] = useState<
+//     "Personal Use" | "Investment" | "Commercial Use" | "any"
+//   >((params.get("primary_purpose") as any) || "any");
+//   const [type, setType] = useState<
+//     | "Agricultural"
+//     | "Non-Agricultural"
+//     | "Farmhouse"
+//     | "Industrial"
+//     | "Commercial"
+//     | "any"
+//   >((params.get("type") as any) || "any");
+//   const [min, setMin] = useState(params.get("min") || "");
+//   const [max, setMax] = useState(params.get("max") || "");
+//   const [bed, setBed] = useState("");
+//   const [bath, setBath] = useState("");
+//   const [view, setView] = useState<"grid" | "list">("grid");
+//   const [properties, setProperties] = useState<Property[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+//   const [authModalOpen, setAuthModalOpen] = useState(false);
+//   const [targetPropertyId, setTargetPropertyId] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     const fetchProperties = async () => {
+//       const token = localStorage.getItem("userToken");
+//       if (!token) {
+//         setError("Please sign in to view properties.");
+//         setLoading(false);
+//         toast.error("Please sign in to continue.", {
+//           action: {
+//             label: "Sign In",
+//             onClick: () => setAuthModalOpen(true),
+//           },
+//         });
+//         return;
+//       }
+
+//       try {
+//         setLoading(true);
+//         const queryParams = new URLSearchParams();
+//         if (type !== "any") queryParams.append("type", type);
+//         if (min) queryParams.append("min", min);
+//         if (max) queryParams.append("max", max);
+//         if (location) queryParams.append("location", location);
+//         if (primaryPurpose !== "any")
+//           queryParams.append("primary_purpose", primaryPurpose);
+
+//         const response = await axios.get(
+//           `http://localhost:5050/api/user/properties?${queryParams.toString()}`,
+//           {
+//             headers: {
+//               "Content-Type": "application/json",
+//               Authorization: `Bearer ${token}`,
+//             },
+//           }
+//         );
+
+//         if (response.data.success) {
+//           const mappedProperties: Property[] = response.data.properties.map(
+//             (p: any) => ({
+//               ...p,
+//               primary_purpose: p.primary_purpose,
+//               bedrooms: 2,
+//               bathrooms: 2,
+//               floorplan: "/placeholder.svg",
+//               pros: ["Great location", "Well-maintained"],
+//               amenities: p.features || ["Basic amenities"],
+//               investment_gain: p.investment_gain,
+//               return_of_investment: p.return_of_investment,
+//               water_connectivity: p.water_connectivity,
+//               electricity_connectivity: p.electricity_connectivity,
+//               gas_connectivity: p.gas_connectivity,
+//               market_risk: p.market_risk,
+//               regulatory_risk: p.regulatory_risk,
+//               financial_risk: p.financial_risk,
+//               liquidity_risk: p.liquidity_risk,
+//               physical_risk: p.physical_risk,
+//               risk_percentage: p.risk_percentage,
+//               aiInsights: {
+//                 neighborhood: {
+//                   schools: 5,
+//                   hospitals: 3,
+//                   malls: 2,
+//                   crimeRate: "Low",
+//                   commuteTime: "15 min to city center",
+//                 },
+//                 priceAnalysis: "Competitive pricing for the area.",
+//                 investmentRating: 4.0,
+//               },
+//             })
+//           );
+//           setProperties(mappedProperties);
+//         } else {
+//           throw new Error(response.data.message || "Error fetching properties");
+//         }
+//       } catch (err: any) {
+//         if (err.response?.status === 401) {
+//           setError("Unauthorized access. Please sign in again.");
+//           toast.error("Session expired. Please sign in again.", {
+//             action: {
+//               label: "Sign In",
+//               onClick: () => setAuthModalOpen(true),
+//             },
+//           });
+//         } else {
+//           setError(
+//             err.response?.data?.message ||
+//               err.message ||
+//               "Failed to load properties"
+//           );
+//           toast.error(
+//             err.response?.data?.message ||
+//               "Failed to load properties. Please try again."
+//           );
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchProperties();
+//   }, [navigate, type, min, max, location, primaryPurpose]);
+
+//   useEffect(() => {
+//     if (targetPropertyId && localStorage.getItem("userToken")) {
+//       navigate(`/property/${targetPropertyId}`);
+//       setTargetPropertyId(null);
+//     }
+//   }, [targetPropertyId, navigate]);
+
+//   const filtered = useMemo(() => {
+//     return properties.filter((p: Property) => {
+//       if (primaryPurpose !== "any" && p.primary_purpose !== primaryPurpose)
+//         return false;
+//       if (bed && p.bedrooms! < Number(bed)) return false;
+//       if (bath && p.bathrooms! < Number(bath)) return false;
+//       return true;
+//     });
+//   }, [properties, primaryPurpose, bed, bath]);
+
+//   if (loading) {
+//     return <div>Loading properties...</div>;
+//   }
+
+//   if (error) {
+//     return <div>Error: {error}</div>;
+//   }
+
+//   return (
+//     <>
+//       <Seo
+//         title="Property Listings | EstateHub"
+//         description="Browse properties by purpose, type, location, price, bedrooms, and bathrooms. Switch grid or list view, or open map view."
+//         canonicalPath="/listings"
+//       />
+//       <h1 className="sr-only">Property Listings</h1>
+
+//       <section className="bg-card p-4 rounded-lg shadow-sm grid grid-cols-2 md:grid-cols-6 gap-3">
+//         <Select
+//           value={primaryPurpose}
+//           onValueChange={(v) => setPrimaryPurpose(v as any)}
+//         >
+//           <SelectTrigger className="col-span-2 md:col-span-1">
+//             <SelectValue placeholder="Primary Purpose" />
+//           </SelectTrigger>
+//           <SelectContent>
+//             <SelectItem value="any">Primary-Purpose</SelectItem>
+//             <SelectItem value="Personal Use">Personal Use</SelectItem>
+//             <SelectItem value="Investment">Investment</SelectItem>
+//             <SelectItem value="Commercial Use">Commercial Use</SelectItem>
+//           </SelectContent>
+//         </Select>
+//         <Input
+//           placeholder="Location"
+//           value={location}
+//           onChange={(e) => setLocation(e.target.value)}
+//           className="col-span-2 md:col-span-2"
+//         />
+//         <Input
+//           placeholder="Min"
+//           type="number"
+//           value={min}
+//           onChange={(e) => setMin(e.target.value)}
+//         />
+//         <Input
+//           placeholder="Max"
+//           type="number"
+//           value={max}
+//           onChange={(e) => setMax(e.target.value)}
+//         />
+//         <Select value={type} onValueChange={(v) => setType(v as any)}>
+//           <SelectTrigger>
+//             <SelectValue placeholder="Property Type" />
+//           </SelectTrigger>
+//           <SelectContent>
+//             <SelectItem value="any">Any</SelectItem>
+//             <SelectItem value="Agricultural">Agricultural</SelectItem>
+//             <SelectItem value="Non-Agricultural">Non-Agricultural</SelectItem>
+//             <SelectItem value="Farmhouse">Farmhouse</SelectItem>
+//             <SelectItem value="Industrial">Industrial</SelectItem>
+//             <SelectItem value="Commercial">Commercial</SelectItem>
+//           </SelectContent>
+//         </Select>
+//         <Input
+//           placeholder="Bedrooms"
+//           type="number"
+//           value={bed}
+//           onChange={(e) => setBed(e.target.value)}
+//         />
+//         <Input
+//           placeholder="Bathrooms"
+//           type="number"
+//           value={bath}
+//           onChange={(e) => setBath(e.target.value)}
+//         />
+//         <div className="col-span-2 md:col-span-2 flex items-center justify-end gap-2">
+//           <Button
+//             variant={view === "grid" ? "default" : "secondary"}
+//             onClick={() => setView("grid")}
+//           >
+//             Grid
+//           </Button>
+//           <Button
+//             variant={view === "list" ? "default" : "secondary"}
+//             onClick={() => setView("list")}
+//           >
+//             List
+//           </Button>
+//           <Button asChild>
+//             <Link to="/map">Map view</Link>
+//           </Button>
+//         </div>
+//       </section>
+
+//       <section className="mt-6">
+//         <div
+//           className={
+//             view === "grid"
+//               ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+//               : "grid gap-4"
+//           }
+//         >
+//           {filtered.map((p) => (
+//             <div
+//               key={p.id}
+//               className={
+//                 view === "grid"
+//                   ? ""
+//                   : "grid grid-cols-1 sm:grid-cols-3 items-stretch gap-4 p-4 rounded-lg border"
+//               }
+//             >
+//               {view === "grid" ? (
+//                 <PropertyCard
+//                   property={p}
+//                   setAuthModalOpen={setAuthModalOpen}
+//                   setTargetPropertyId={setTargetPropertyId}
+//                 />
+//               ) : (
+//                 <>
+//                   <img
+//                     src={`http://localhost:5050/${p.images[0]}`}
+//                     alt={`${p.title}`}
+//                     className="w-full h-40 object-cover rounded-md"
+//                     onError={(e) => {
+//                       const target = e.target as HTMLImageElement;
+//                       target.src = "/placeholder.svg";
+//                       console.error(
+//                         `Failed to load image for ${p.title}: ${target.src}`
+//                       );
+//                     }}
+//                   />
+//                   <div className="sm:col-span-2 flex flex-col justify-between">
+//                     <PropertyCard
+//                       property={p}
+//                       setAuthModalOpen={setAuthModalOpen}
+//                       setTargetPropertyId={setTargetPropertyId}
+//                     />
+//                   </div>
+//                 </>
+//               )}
+//             </div>
+//           ))}
+//         </div>
+//       </section>
+
+//       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+//     </>
+//   );
+// }
 import Seo from "@/components/Seo";
-import { landProperties } from "@/data/landProperties";
-import LandPropertyCard from "@/components/LandPropertyCard";
-import { useMemo, useState } from "react";
+import { LandProperty } from "@/data/landProperties";
+import PropertyCard from "@/components/PropertyCard";
+import { useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import AuthModal from "@/components/AuthModal";
+import { AlertTriangle } from "lucide-react";
+import api from "@/utils/api";
 
 export default function Listings() {
-  const [params] = useSearchParams();
-  const [location, setLocation] = useState(params.get('location') || '');
-  const [type, setType] = useState<'Agricultural' | 'Non-Agricultural' | 'Farmhouse' | 'Industrial' | 'any'>((params.get('type') as any) || 'any');
-  const [min, setMin] = useState(params.get('min') || '');
-  const [max, setMax] = useState(params.get('max') || '');
-  const [view, setView] = useState<'grid'|'list'>('grid');
+  const { toast } = useToast();
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [location, setLocation] = useState(params.get("location") || "");
+  const [primaryPurpose, setPrimaryPurpose] = useState<
+    "Personal Use" | "Investment" | "Commercial Use" | "any"
+  >((params.get("primary_purpose") as any) || "any");
+  const [type, setType] = useState<
+    | "Agricultural"
+    | "Non-Agricultural"
+    | "Farmhouse"
+    | "Industrial"
+    | "Commercial"
+    | "any"
+  >((params.get("type") as any) || "any");
+  const [min, setMin] = useState(params.get("min") || "");
+  const [max, setMax] = useState(params.get("max") || "");
+  const [bed, setBed] = useState("");
+  const [bath, setBath] = useState("");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [properties, setProperties] = useState<LandProperty[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [targetPropertyId, setTargetPropertyId] = useState<string | null>(null);
+
+  const validateInputs = () => {
+    if (min && (isNaN(Number(min)) || Number(min) < 0)) {
+      toast({
+        title: "Invalid Minimum Price",
+        description: "Please enter a valid non-negative number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (max && (isNaN(Number(max)) || Number(max) < 0)) {
+      toast({
+        title: "Invalid Maximum Price",
+        description: "Please enter a valid non-negative number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (min && max && Number(min) > Number(max)) {
+      toast({
+        title: "Invalid Price Range",
+        description: "Minimum price must be less than maximum price.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (bed && (isNaN(Number(bed)) || Number(bed) < 0)) {
+      toast({
+        title: "Invalid Bedrooms",
+        description: "Please enter a valid non-negative number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (bath && (isNaN(Number(bath)) || Number(bath) < 0)) {
+      toast({
+        title: "Invalid Bathrooms",
+        description: "Please enter a valid non-negative number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const updateSearchParams = () => {
+    const newParams = new URLSearchParams();
+    if (type !== "any") newParams.append("type", type);
+    if (min) newParams.append("min", min);
+    if (max) newParams.append("max", max);
+    if (location) newParams.append("location", location);
+    if (primaryPurpose !== "any") newParams.append("primary_purpose", primaryPurpose);
+    setParams(newParams);
+  };
+
+  const fetchProperties = async () => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      setError("Please sign in to view properties.");
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to view properties.",
+        variant: "destructive",
+        action: {
+          label: "Sign In",
+          onClick: () => setAuthModalOpen(true),
+        },
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!validateInputs()) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const queryParams = new URLSearchParams();
+      if (type !== "any") queryParams.append("type", type);
+      if (min) queryParams.append("min", min);
+      if (max) queryParams.append("max", max);
+      if (location) queryParams.append("location", location);
+      if (primaryPurpose !== "any") queryParams.append("primary_purpose", primaryPurpose);
+
+      console.log("Fetching properties from: /api/user/properties", {
+        query: queryParams.toString(),
+        token,
+      });
+      const response = await api.get(`/api/user/properties?${queryParams.toString()}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Properties API response:", response.data);
+
+      if (response.data.success) {
+        const mappedProperties: LandProperty[] = response.data.properties.map(
+          (p: any) => ({
+            ...p,
+            images: p.images.map(
+              (img: string) =>
+                img.startsWith("http") ? img : `${api.defaults.baseURL}/${img}`
+            ),
+            features: p.features || [],
+          })
+        );
+        setProperties(mappedProperties);
+      } else {
+        throw new Error(response.data.message || "Error fetching properties");
+      }
+    } catch (err: any) {
+      console.error("Properties error details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+        url: err.config?.url,
+        baseURL: api.defaults.baseURL,
+      });
+      let errorMsg = "Failed to load properties. Please try again.";
+      if (err.response?.status === 401) {
+        errorMsg = "Unauthorized access. Please sign in again.";
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userAuth");
+        localStorage.removeItem("userData");
+        toast({
+          title: "Session Expired",
+          description: errorMsg,
+          variant: "destructive",
+          action: {
+            label: "Sign In",
+            onClick: () => setAuthModalOpen(true),
+          },
+        });
+      } else if (err.response?.status === 404) {
+        errorMsg = "Properties endpoint not found at /api/user/properties.";
+      }
+      setError(errorMsg);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || errorMsg,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+  }, [type, min, max, location, primaryPurpose]);
+
+  useEffect(() => {
+    updateSearchParams();
+  }, [type, min, max, location, primaryPurpose]);
+
+  useEffect(() => {
+    if (targetPropertyId && localStorage.getItem("userToken")) {
+      navigate(`/property/${targetPropertyId}`);
+      setTargetPropertyId(null);
+    }
+  }, [targetPropertyId, navigate]);
 
   const filtered = useMemo(() => {
-    return landProperties.filter((p) => {
-      if (location && !p.location.toLowerCase().includes(location.toLowerCase())) return false;
-      if (type !== 'any' && p.type !== type) return false;
-      if (min && p.price < Number(min)) return false;
-      if (max && p.price > Number(max)) return false;
-      // Size filtering removed as size is stored as string with units
-      return true;
+    return properties.filter((p: LandProperty) => {
+      if (primaryPurpose !== "any" && p.primary_purpose !== primaryPurpose)
+        return false;
+      return true; // Bedrooms and bathrooms not in API response
     });
-  }, [location, type, min, max]);
+  }, [properties, primaryPurpose]);
+
+  if (loading) {
+    return (
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <p className="mt-2 text-muted-foreground">Loading properties...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2 text-red-600">
+          <AlertTriangle className="w-5 h-5" />
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <Seo
-        title="Land Listings | EstateHub"
-        description="Browse land properties for sale. Filter by location, price, land type, and size. Find agricultural land, non-agricultural plots, farmhouses, and industrial land."
+        title="Property Listings | EstateHub"
+        description="Browse properties by purpose, type, location, price, bedrooms, and bathrooms. Switch grid or list view, or open map view."
         canonicalPath="/listings"
       />
-      <h1 className="sr-only">Land Listings</h1>
+      <header role="banner" aria-label="Property Listings">
+        <h1 className="text-3xl font-bold">Property Listings</h1>
+        <p className="text-muted-foreground mt-2">
+          Browse our curated selection of land properties.
+        </p>
+      </header>
 
-      <section className="bg-card p-4 rounded-lg shadow-sm grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Input placeholder="Location" value={location} onChange={(e)=>setLocation(e.target.value)} className="col-span-2" />
-        <Input placeholder="Min Price (₹)" type="number" value={min} onChange={(e)=>setMin(e.target.value)} />
-        <Input placeholder="Max Price (₹)" type="number" value={max} onChange={(e)=>setMax(e.target.value)} />
-        <Select value={type} onValueChange={(v)=>setType(v as any)}>
-          <SelectTrigger><SelectValue placeholder="Land Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="any">Any Type</SelectItem>
-            <SelectItem value="Agricultural">Agricultural</SelectItem>
-            <SelectItem value="Non-Agricultural">Non-Agricultural</SelectItem>
-            <SelectItem value="Farmhouse">Farmhouse</SelectItem>
-            <SelectItem value="Industrial">Industrial</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="col-span-2 md:col-span-5 flex items-center justify-end gap-2">
-          <Button variant={view==='grid'?'default':'secondary'} onClick={()=>setView('grid')}>Grid</Button>
-          <Button variant={view==='list'?'default':'secondary'} onClick={()=>setView('list')}>List</Button>
-          <Button asChild>
+      <section className="mt-6 bg-card p-4 rounded-lg shadow-sm grid grid-cols-2 md:grid-cols-6 gap-3" aria-label="Property filters">
+        <div className="col-span-2 md:col-span-1 space-y-2">
+          <Label htmlFor="primary-purpose">Primary Purpose</Label>
+          <Select
+            value={primaryPurpose}
+            onValueChange={(v) => setPrimaryPurpose(v as any)}
+            disabled={loading}
+          >
+            <SelectTrigger id="primary-purpose">
+              <SelectValue placeholder="Primary Purpose" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any</SelectItem>
+              <SelectItem value="Personal Use">Personal Use</SelectItem>
+              <SelectItem value="Investment">Investment</SelectItem>
+              <SelectItem value="Commercial Use">Commercial Use</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-2 md:col-span-2 space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <Input
+            id="location"
+            placeholder="Enter location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="min-price">Min Price</Label>
+          <Input
+            id="min-price"
+            placeholder="Min Price"
+            type="number"
+            value={min}
+            onChange={(e) => setMin(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="max-price">Max Price</Label>
+          <Input
+            id="max-price"
+            placeholder="Max Price"
+            type="number"
+            value={max}
+            onChange={(e) => setMax(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="col-span-2 md:col-span-1 space-y-2">
+          <Label htmlFor="type">Property Type</Label>
+          <Select value={type} onValueChange={(v) => setType(v as any)} disabled={loading}>
+            <SelectTrigger id="type">
+              <SelectValue placeholder="Property Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any</SelectItem>
+              <SelectItem value="Agricultural">Agricultural</SelectItem>
+              <SelectItem value="Non-Agricultural">Non-Agricultural</SelectItem>
+              <SelectItem value="Farmhouse">Farmhouse</SelectItem>
+              <SelectItem value="Industrial">Industrial</SelectItem>
+              <SelectItem value="Commercial">Commercial</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bedrooms">Bedrooms</Label>
+          <Input
+            id="bedrooms"
+            placeholder="Bedrooms"
+            type="number"
+            value={bed}
+            onChange={(e) => setBed(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bathrooms">Bathrooms</Label>
+          <Input
+            id="bathrooms"
+            placeholder="Bathrooms"
+            type="number"
+            value={bath}
+            onChange={(e) => setBath(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <div className="col-span-2 md:col-span-2 flex items-center justify-end gap-2">
+          <Button
+            variant={view === "grid" ? "default" : "secondary"}
+            onClick={() => setView("grid")}
+            disabled={loading}
+          >
+            Grid
+          </Button>
+          <Button
+            variant={view === "list" ? "default" : "secondary"}
+            onClick={() => setView("list")}
+            disabled={loading}
+          >
+            List
+          </Button>
+          <Button asChild disabled={loading}>
             <Link to="/map">Map view</Link>
           </Button>
         </div>
       </section>
 
       <section className="mt-6">
-        <div className={view==='grid' ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3' : 'grid gap-4'}>
-          {filtered.map(p => (
-            <div key={p.id} className={view==='grid' ? '' : 'grid grid-cols-1 sm:grid-cols-3 items-stretch gap-4 p-4 rounded-lg border'}>
-              {view==='grid' ? (
-                <LandPropertyCard property={p} showFullDetails />
-              ) : (
-                <>
-                  <img src={p.images[0]} alt={`${p.title}`} className="w-full h-40 object-cover rounded-md" />
-                  <div className="sm:col-span-2 flex flex-col justify-between">
-                    <LandPropertyCard property={p} showFullDetails />
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+        {filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground">
+            No properties match your filters. Try adjusting your search.
+          </p>
+        ) : (
+          <div
+            className={
+              view === "grid"
+                ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid gap-4"
+            }
+          >
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className={
+                  view === "grid"
+                    ? ""
+                    : "grid grid-cols-1 sm:grid-cols-3 items-stretch gap-4 p-4 rounded-lg border"
+                }
+              >
+                {view === "grid" ? (
+                  <PropertyCard
+                    property={p}
+                    setAuthModalOpen={setAuthModalOpen}
+                    setTargetPropertyId={setTargetPropertyId}
+                  />
+                ) : (
+                  <>
+                    <img
+                      src={
+                        p.images[0].startsWith("http")
+                          ? p.images[0]
+                          : `${api.defaults.baseURL}/${p.images[0] || "/placeholder.svg"}`
+                      }
+                      alt={`${p.title}`}
+                      className="w-full h-40 object-cover rounded-md"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                        console.error(
+                          `Failed to load image for ${p.title}: ${target.src}`
+                        );
+                      }}
+                    />
+                    <div className="sm:col-span-2 flex flex-col justify-between">
+                      <PropertyCard
+                        property={p}
+                        setAuthModalOpen={setAuthModalOpen}
+                        setTargetPropertyId={setTargetPropertyId}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   );
 }
