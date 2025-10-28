@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Users, MapPin, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, Search, Send } from "lucide-react";
 import { landProperties, LandProperty } from "@/data/landProperties";
 import { useNavigate } from "react-router-dom";
 import PropertyDetailModal from "@/components/PropertyDetailModal";
 import EditPropertyModal from "@/components/EditPropertyModal";
+import AddUserModal, { UserData } from "@/components/AddUserModal";
 
 const AdminDashboard = () => {
   const [properties, setProperties] = useState(landProperties);
@@ -16,13 +18,25 @@ const AdminDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<LandProperty | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [userSuggestions, setUserSuggestions] = useState<{[key: string]: string[]}>({
-    "arjun@example.com": [],
-    "priya@example.com": [],
-    "rohit@example.com": [],
-    "sneha@example.com": []
-  });
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [users, setUsers] = useState<UserData[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUsers = localStorage.getItem("adminUsers");
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    } else {
+      const defaultUsers: UserData[] = [
+        { id: "1", name: "Arjun Patel", email: "arjun@example.com", role: "User", referralCode: "REFABC123", referredBy: "-", status: "Active" },
+        { id: "2", name: "Priya Shah", email: "priya@example.com", role: "Broker", referralCode: "REFDEF456", referredBy: "REFABC123", status: "Active" },
+        { id: "3", name: "Rohit Mehta", email: "rohit@example.com", role: "User", referralCode: "REFGHI789", referredBy: "REFDEF456", status: "Inactive" },
+        { id: "4", name: "Sneha Desai", email: "sneha@example.com", role: "Admin", referralCode: "REFJKL012", referredBy: "-", status: "Active" }
+      ];
+      setUsers(defaultUsers);
+      localStorage.setItem("adminUsers", JSON.stringify(defaultUsers));
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");
@@ -87,11 +101,24 @@ const AdminDashboard = () => {
     setShowEditModal(true);
   };
 
-  const suggestPropertyToUser = (userEmail: string, propertyId: string) => {
-    setUserSuggestions(prev => ({
-      ...prev,
-      [userEmail]: [...(prev[userEmail] || []), propertyId]
-    }));
+  const handleAddUser = (user: UserData) => {
+    const updatedUsers = [...users, user];
+    setUsers(updatedUsers);
+    localStorage.setItem("adminUsers", JSON.stringify(updatedUsers));
+  };
+
+  const handleDeleteUser = (id: string) => {
+    const updatedUsers = users.filter(u => u.id !== id);
+    setUsers(updatedUsers);
+    localStorage.setItem("adminUsers", JSON.stringify(updatedUsers));
+  };
+
+  const toggleUserStatus = (id: string) => {
+    const updatedUsers = users.map(u => 
+      u.id === id ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" as "Active" | "Inactive" } : u
+    );
+    setUsers(updatedUsers);
+    localStorage.setItem("adminUsers", JSON.stringify(updatedUsers));
   };
 
   return (
@@ -277,69 +304,65 @@ const AdminDashboard = () => {
 
           <TabsContent value="users" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>User Management & Property Suggestions</CardTitle>
-                <CardDescription>Manage user accounts and suggest properties</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Manage user accounts and roles</CardDescription>
+                </div>
+                <Button onClick={() => setShowAddUserModal(true)} className="bg-gradient-to-r from-primary to-secondary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New User
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {[
-                    { name: "Arjun Patel", email: "arjun@example.com", type: "Premium Investor", preferences: "Agricultural, Budget: ₹2-5Cr" },
-                    { name: "Priya Shah", email: "priya@example.com", type: "Regular User", preferences: "Farmhouse, Budget: ₹50L-2Cr" },
-                    { name: "Rohit Mehta", email: "rohit@example.com", type: "Corporate Client", preferences: "Industrial, Budget: ₹5-20Cr" },
-                    { name: "Sneha Desai", email: "sneha@example.com", type: "Premium Investor", preferences: "Commercial, Budget: ₹3-10Cr" }
-                  ].map((user, idx) => (
-                    <Card key={idx} className="p-4">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{user.name}</h3>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{user.preferences}</p>
-                          <Badge variant="outline" className="mt-2">{user.type}</Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium">Suggested Properties:</div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {properties.slice(0, 3).map((property) => (
-                            <div key={property.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
-                              <div className="flex-1">
-                                <div className="font-medium">{property.title}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  ₹{(property.price / 100000).toFixed(1)}L - {property.location}
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => suggestPropertyToUser(user.email, property.id)}
-                                disabled={userSuggestions[user.email]?.includes(property.id)}
-                              >
-                                {userSuggestions[user.email]?.includes(property.id) ? (
-                                  "Suggested"
-                                ) : (
-                                  <>
-                                    <Send className="w-3 h-3 mr-1" />
-                                    Suggest
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {userSuggestions[user.email]?.length > 0 && (
-                          <div className="mt-3 p-2 bg-green-50 rounded">
-                            <div className="text-xs font-medium text-green-800">
-                              {userSuggestions[user.email].length} properties suggested to this user
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Referral Code</TableHead>
+                      <TableHead>Referred By</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={user.role === "Admin" ? "default" : user.role === "Broker" ? "secondary" : "outline"}>
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-2 py-1 rounded">{user.referralCode}</code>
+                        </TableCell>
+                        <TableCell>{user.referredBy}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={user.status === "Active" ? "default" : "secondary"}
+                            className="cursor-pointer"
+                            onClick={() => toggleUserStatus(user.id)}
+                          >
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -358,6 +381,12 @@ const AdminDashboard = () => {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSave={handlePropertySave}
+      />
+
+      <AddUserModal
+        open={showAddUserModal}
+        onOpenChange={setShowAddUserModal}
+        onSave={handleAddUser}
       />
     </div>
   );

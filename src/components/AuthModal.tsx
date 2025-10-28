@@ -18,6 +18,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     email: "",
     mobile: "",
     password: "",
+    referralCode: "",
     otp: ""
   });
   const [signinMethod, setSigninMethod] = useState<"email" | "mobile">("email");
@@ -28,10 +29,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   };
 
   const handleSignup = () => {
-    if (!formData.name || !formData.email || !formData.mobile) {
+    if (!formData.name || !formData.email || !formData.mobile || !formData.referralCode) {
       toast({
         title: "Error",
-        description: "Please fill all fields",
+        description: "Please fill all fields including referral code",
         variant: "destructive"
       });
       return;
@@ -64,11 +65,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     localStorage.setItem("userData", JSON.stringify({
       name: formData.name,
       email: formData.email,
-      mobile: formData.mobile
+      mobile: formData.mobile,
+      referralCode: formData.referralCode
     }));
     onOpenChange(false);
     setAuthStep("signin");
-    setFormData({ name: "", email: "", mobile: "", password: "", otp: "" });
+    setFormData({ name: "", email: "", mobile: "", password: "", referralCode: "", otp: "" });
   };
 
   const handleSignin = () => {
@@ -98,7 +100,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         });
         localStorage.setItem("userAuth", "true");
         onOpenChange(false);
-        setFormData({ name: "", email: "", mobile: "", password: "", otp: "" });
+        setFormData({ name: "", email: "", mobile: "", password: "", referralCode: "", otp: "" });
         return;
       }
     }
@@ -138,6 +140,16 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           value={formData.mobile}
           onChange={(e) => handleInputChange("mobile", e.target.value)}
           placeholder="Enter your mobile number"
+        />
+      </div>
+      <div>
+        <Label htmlFor="referralCode">Referral Code *</Label>
+        <Input
+          id="referralCode"
+          value={formData.referralCode}
+          onChange={(e) => handleInputChange("referralCode", e.target.value)}
+          placeholder="Enter referral code"
+          required
         />
       </div>
       <Button onClick={handleSignup} className="w-full">
