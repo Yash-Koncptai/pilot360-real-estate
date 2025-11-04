@@ -218,15 +218,7 @@ export default function PropertyDetails() {
         structuredData={jsonLd}
       />
       <article>
-        {/* <nav className="mb-4">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
-        </nav> */}
+        
 
         <header className="mb-4">
           <h1 className="text-3xl font-bold">{property.title}</h1>
