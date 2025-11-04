@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +21,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+
+// CONFIG
+const BASE_IMAGE_URL = "http://localhost:5050";
+const MAX_IMAGES = 20;
 
 interface Property {
   id?: string;
@@ -70,6 +73,7 @@ export default function EditPropertyModal({
   onClose,
   onSave,
 }: EditPropertyModalProps) {
+  // STATE
   const [formData, setFormData] = useState<Property>({
     id: "",
     title: "",
@@ -106,46 +110,33 @@ export default function EditPropertyModal({
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
-  // Format number to comma-separated string
-  const formatPrice = (value: number) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // HELPERS
+  const formatPrice = (v: number) =>
+    v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const parsePrice = (v: string) => Number(v.replace(/,/g, ""));
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://via.placeholder.com/150?text=No+Image";
+    return path.startsWith("http") ? path : `${BASE_IMAGE_URL}/${path}`;
   };
 
-  // Parse comma-separated string to number
-  const parsePrice = (value: string) => {
-    return Number(value.replace(/,/g, ""));
+  const totalImageCount = existingImages.length + newImages.length;
+
+  // Get file names from input
+  const getSelectedFileNames = () => {
+    if (!fileInputRef.current?.files) return "";
+    return Array.from(fileInputRef.current.files)
+      .map((f) => f.name)
+      .join(", ");
   };
 
-  // Reinitialize formData when property or isOpen changes
+  // EFFECTS
   useEffect(() => {
     if (property && isOpen) {
-      setFormData({
-        id: property.id || "",
-        title: property.title || "",
-        price: property.price || 0,
-        type: property.type || "Agricultural",
-        size: property.size || "",
-        primary_purpose: property.primary_purpose || "Personal Use",
-        location: property.location || "",
-        latitude: property.latitude || 0,
-        longitude: property.longitude || 0,
-        description: property.description || "",
-        private: property.private || false,
-        investment_gain: property.investment_gain || 0,
-        water_connectivity: property.water_connectivity || false,
-        electricity_connectivity: property.electricity_connectivity || false,
-        gas_connectivity: property.gas_connectivity || false,
-        market_risk: property.market_risk || false,
-        regulatory_risk: property.regulatory_risk || false,
-        financial_risk: property.financial_risk || false,
-        liquidity_risk: property.liquidity_risk || false,
-        physical_risk: property.physical_risk || false,
-        features: property.features || [],
-        images: property.images || [],
-        views: property.views || null,
-        createdAt: property.createdAt || "",
-        updatedAt: property.updatedAt || "",
-      });
+      setFormData({ ...property });
       setDisplayPrice(formatPrice(property.price || 0));
       setFeaturesInput((property.features || []).join(", "));
       setExistingImages(property.images || []);
@@ -153,42 +144,98 @@ export default function EditPropertyModal({
       setNewImages([]);
       setError("");
     } else if (!isOpen) {
-      setFormData({
-        id: "",
-        title: "",
-        price: 0,
-        type: "Agricultural",
-        size: "",
-        primary_purpose: "Personal Use",
-        location: "",
-        latitude: 0,
-        longitude: 0,
-        description: "",
-        private: false,
-        investment_gain: 0,
-        water_connectivity: false,
-        electricity_connectivity: false,
-        gas_connectivity: false,
-        market_risk: false,
-        regulatory_risk: false,
-        financial_risk: false,
-        liquidity_risk: false,
-        physical_risk: false,
-        features: [],
-        images: [],
-        views: null,
-        createdAt: "",
-        updatedAt: "",
-      });
-      setDisplayPrice("");
-      setFeaturesInput("");
-      setExistingImages([]);
-      setDeletedImages([]);
-      setNewImages([]);
-      setError("");
+      resetForm();
     }
   }, [property, isOpen]);
 
+  const resetForm = () => {
+    setFormData({
+      id: "",
+      title: "",
+      price: 0,
+      type: "Agricultural",
+      size: "",
+      primary_purpose: "Personal Use",
+      location: "",
+      latitude: 0,
+      longitude: 0,
+      description: "",
+      private: false,
+      investment_gain: 0,
+      water_connectivity: false,
+      electricity_connectivity: false,
+      gas_connectivity: false,
+      market_risk: false,
+      regulatory_risk: false,
+      financial_risk: false,
+      liquidity_risk: false,
+      physical_risk: false,
+      features: [],
+      images: [],
+      views: null,
+      createdAt: "",
+      updatedAt: "",
+    });
+    setDisplayPrice("");
+    setFeaturesInput("");
+    setExistingImages([]);
+    setDeletedImages([]);
+    setNewImages([]);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // IMAGE HANDLERS
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles = Array.from(files);
+    const totalAfter = totalImageCount + newFiles.length;
+
+    if (totalAfter > MAX_IMAGES) {
+      const allowed = MAX_IMAGES - totalImageCount;
+      toast.error(
+        `You can only add ${allowed} more image(s). Max ${MAX_IMAGES} allowed.`
+      );
+      // Keep input as-is (user sees the files they tried to add)
+      return;
+    }
+
+    setNewImages((prev) => [...prev, ...newFiles]);
+    toast.success(`${newFiles.length} image(s) added. Total: ${totalAfter}`);
+    // Do NOT clear input — we want file names to stay visible
+  };
+
+  const removeExistingImage = (img: string) => {
+    setExistingImages((prev) => prev.filter((i) => i !== img));
+    setDeletedImages((prev) => [...prev, img]);
+    // Optional: clear input if no new images left
+    if (newImages.length === 0 && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeNewImage = (idx: number) => {
+    const removedFile = newImages[idx];
+    setNewImages((prev) => prev.filter((_, i) => i !== idx));
+
+    // Rebuild FileList without the removed file
+    const dt = new DataTransfer();
+    newImages
+      .filter((_, i) => i !== idx)
+      .forEach((f) => dt.items.add(f));
+    if (fileInputRef.current) {
+      fileInputRef.current.files = dt.files;
+    }
+
+    // If no new images left, clear input
+    if (dt.files.length === 0 && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // SAVE
   const handleSave = async () => {
     if (
       !formData.title ||
@@ -210,6 +257,7 @@ export default function EditPropertyModal({
         .split(",")
         .map((f) => f.trim())
         .filter((f) => f);
+
       await onSave({
         ...formData,
         price: parsePrice(displayPrice || "0"),
@@ -218,50 +266,29 @@ export default function EditPropertyModal({
         existingImages: existingImages.length ? existingImages : null,
         deletedImages: deletedImages.length ? deletedImages : null,
       });
+
       toast.success(
-        property
-          ? "Property updated successfully"
-          : "Property added successfully"
+        property ? "Property updated successfully" : "Property added successfully"
       );
       onClose();
     } catch (err: any) {
-      const errorMessage =
+      const msg =
         err.response?.data?.message ||
         "Failed to save property. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const removeFeature = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      features: prev.features?.filter((_, i) => i !== index) || [],
-    }));
-    setFeaturesInput(
-      (formData.features?.filter((_, i) => i !== index) || []).join(", ")
-    );
+  const removeFeature = (idx: number) => {
+    const updated = formData.features?.filter((_, i) => i !== idx) || [];
+    setFormData((prev) => ({ ...prev, features: updated }));
+    setFeaturesInput(updated.join(", "));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      setNewImages((prev) => [...prev, ...newFiles]);
-    }
-  };
-
-  const removeExistingImage = (image: string) => {
-    setExistingImages((prev) => prev.filter((img) => img !== image));
-    setDeletedImages((prev) => [...prev, image]);
-  };
-
-  const removeNewImage = (index: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
+  // RENDER
   if (!isOpen) return null;
 
   return (
@@ -276,9 +303,7 @@ export default function EditPropertyModal({
           </DialogTitle>
         </DialogHeader>
         <p id="edit-property-description" className="sr-only">
-          Form to edit or add property details including title, price, type,
-          size, primary purpose, location, coordinates, description, private
-          status, investment gain, connectivity, risks, features, and images.
+          Form to edit or add property details.
         </p>
 
         <div className="space-y-6">
@@ -288,7 +313,7 @@ export default function EditPropertyModal({
             </div>
           )}
 
-          {/* Basic Information */}
+          {/* BASIC INFO */}
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -301,10 +326,7 @@ export default function EditPropertyModal({
                     id="title"
                     value={formData.title}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }))
+                      setFormData((p) => ({ ...p, title: e.target.value }))
                     }
                     placeholder="Enter property title"
                     required
@@ -317,14 +339,14 @@ export default function EditPropertyModal({
                     type="text"
                     value={displayPrice}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9,]/g, "");
-                      setDisplayPrice(value);
-                      setFormData((prev) => ({
-                        ...prev,
-                        price: parsePrice(value || "0"),
+                      const v = e.target.value.replace(/[^0-9,]/g, "");
+                      setDisplayPrice(v);
+                      setFormData((p) => ({
+                        ...p,
+                        price: parsePrice(v || "0"),
                       }));
                     }}
-                    placeholder="Enter price in rupees (e.g., 30,000)"
+                    placeholder="e.g. 30,000"
                     required
                   />
                 </div>
@@ -335,8 +357,8 @@ export default function EditPropertyModal({
                   <Label htmlFor="type">Property Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, type: value }))
+                    onValueChange={(v) =>
+                      setFormData((p) => ({ ...p, type: v }))
                     }
                   >
                     <SelectTrigger>
@@ -359,9 +381,9 @@ export default function EditPropertyModal({
                     id="size"
                     value={formData.size}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, size: e.target.value }))
+                      setFormData((p) => ({ ...p, size: e.target.value }))
                     }
-                    placeholder="e.g., 5 acres, 2400 sq ft"
+                    placeholder="e.g. 5 acres"
                     required
                   />
                 </div>
@@ -369,15 +391,15 @@ export default function EditPropertyModal({
                   <Label htmlFor="primary_purpose">Primary Purpose</Label>
                   <Select
                     value={formData.primary_purpose}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        primary_purpose: value,
+                    onValueChange={(v) =>
+                      setFormData((p) => ({
+                        ...p,
+                        primary_purpose: v,
                       }))
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select primary purpose" />
+                      <SelectValue placeholder="Select purpose" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Personal Use">Personal Use</SelectItem>
@@ -397,8 +419,8 @@ export default function EditPropertyModal({
                     id="location"
                     value={formData.location}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         location: e.target.value,
                       }))
                     }
@@ -414,12 +436,12 @@ export default function EditPropertyModal({
                     step="any"
                     value={formData.latitude}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         latitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="Enter latitude"
+                    placeholder="e.g. 28.6139"
                     required
                   />
                 </div>
@@ -431,12 +453,12 @@ export default function EditPropertyModal({
                     step="any"
                     value={formData.longitude}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         longitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="Enter longitude"
+                    placeholder="e.g. 77.2090"
                     required
                   />
                 </div>
@@ -448,14 +470,13 @@ export default function EditPropertyModal({
                   id="description"
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
+                    setFormData((p) => ({
+                      ...p,
                       description: e.target.value,
                     }))
                   }
-                  placeholder="Enter property description"
+                  placeholder="Describe the property"
                   rows={3}
-                  required
                 />
               </div>
 
@@ -463,11 +484,8 @@ export default function EditPropertyModal({
                 <Switch
                   id="private"
                   checked={formData.private}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      private: checked,
-                    }))
+                  onCheckedChange={(c) =>
+                    setFormData((p) => ({ ...p, private: c }))
                   }
                 />
                 <Label htmlFor="private">Private Property</Label>
@@ -477,258 +495,203 @@ export default function EditPropertyModal({
                 <Label htmlFor="investment_gain">Investment Gain (%)</Label>
                 <Input
                   id="investment_gain"
-                  type="number"
-                  step="0.1"
+                  type="text"
                   value={formData.investment_gain || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
+                    setFormData((p) => ({
+                      ...p,
                       investment_gain: Number(e.target.value),
                     }))
                   }
-                  placeholder="Enter estimated investment gain percentage"
+                  placeholder="e.g. 12.5"
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Connectivity and Risks */}
+          {/* CONNECTIVITY & RISKS */}
           <Card>
             <CardHeader>
               <CardTitle>Connectivity and Risk Factors</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="water_connectivity">Water Connectivity</Label>
-                  <Select
-                    value={formData.water_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        water_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="electricity_connectivity">
-                    Electricity Connectivity
-                  </Label>
-                  <Select
-                    value={formData.electricity_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        electricity_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="gas_connectivity">Gas Connectivity</Label>
-                  <Select
-                    value={formData.gas_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        gas_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {["water", "electricity", "gas"].map((key) => (
+                  <div key={key}>
+                    <Label htmlFor={`${key}_connectivity`}>
+                      {key.charAt(0).toUpperCase() + key.slice(1)} Connectivity
+                    </Label>
+                    <Select
+                      value={
+                        formData[`${key}_connectivity` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${key}_connectivity`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="market_risk">
-                    Market Risk (Price Volatility)
-                  </Label>
-                  <Select
-                    value={formData.market_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        market_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="regulatory_risk">
-                    Regulatory Risk (Zoning/Permitting)
-                  </Label>
-                  <Select
-                    value={formData.regulatory_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        regulatory_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="financial_risk">
-                    Financial Risk (Tax Burden)
-                  </Label>
-                  <Select
-                    value={formData.financial_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        financial_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {[
+                  { key: "market", label: "Market Risk" },
+                  { key: "regulatory", label: "Regulatory Risk" },
+                  { key: "financial", label: "Financial Risk" },
+                ].map((item) => (
+                  <div key={item.key}>
+                    <Label htmlFor={item.key + "_risk"}>{item.label}</Label>
+                    <Select
+                      value={
+                        formData[`${item.key}_risk` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${item.key}_risk`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="liquidity_risk">
-                    Liquidity Risk (Selling Difficulty)
-                  </Label>
-                  <Select
-                    value={formData.liquidity_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        liquidity_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="physical_risk">
-                    Physical Risk (Site Conditions)
-                  </Label>
-                  <Select
-                    value={formData.physical_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        physical_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {[
+                  { key: "liquidity", label: "Liquidity Risk" },
+                  { key: "physical", label: "Physical Risk" },
+                ].map((item) => (
+                  <div key={item.key}>
+                    <Label htmlFor={item.key + "_risk"}>{item.label}</Label>
+                    <Select
+                      value={
+                        formData[`${item.key}_risk` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${item.key}_risk`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Images */}
+          {/* IMAGES */}
           <Card>
             <CardHeader>
               <CardTitle>Property Images</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {totalImageCount} / {MAX_IMAGES} images
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="images">Upload Images</Label>
-                <Input
-                  id="images"
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={fileInputRef}
+                    id="images"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={totalImageCount >= MAX_IMAGES}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-muted-foreground whitespace-nowrap max-w-xs truncate">
+                    {getSelectedFileNames() || "No file chosen"}
+                  </span>
+                </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                {existingImages.map((image, index) => (
-                  <div key={index} className="relative">
+
+              {totalImageCount >= MAX_IMAGES && (
+                <p className="text-xs text-destructive">
+                  Maximum {MAX_IMAGES} images reached.
+                </p>
+              )}
+
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Existing Images */}
+                {existingImages.map((img, i) => (
+                  <div
+                    key={`exist-${i}`}
+                    className="relative group rounded-lg overflow-hidden"
+                  >
                     <img
-                      src={image}
-                      alt={`Property ${index + 1}`}
-                      className="w-full h-32 object-cover rounded"
+                      src={getImageUrl(img)}
+                      alt={`Existing ${i + 1}`}
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/150?text=Not+Found";
+                      }}
                     />
                     <Button
                       variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeExistingImage(image)}
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeExistingImage(img)}
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
-                {newImages.map((image, index) => (
-                  <div key={`new-${index}`} className="relative">
+
+                {/* New Images */}
+                {newImages.map((file, i) => (
+                  <div
+                    key={`new-${i}`}
+                    className="relative group rounded-lg overflow-hidden"
+                  >
                     <img
-                      src={URL.createObjectURL(image)}
-                      alt={`New Property ${index + 1}`}
-                      className="w-full h-32 object-cover rounded"
+                      src={URL.createObjectURL(file)}
+                      alt={`New ${i + 1}`}
+                      className="w-full h-32 object-cover"
                     />
                     <Button
                       variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeNewImage(index)}
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeNewImage(i)}
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
@@ -736,47 +699,41 @@ export default function EditPropertyModal({
             </CardContent>
           </Card>
 
-          {/* Features */}
+          {/* FEATURES */}
           <Card>
             <CardHeader>
               <CardTitle>Property Features</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  value={featuresInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFeaturesInput(value);
-                    const featuresArray = value
-                      .split(",")
-                      .map((f) => f.trim())
-                      .filter((f) => f);
-                    setFormData((prev) => ({
-                      ...prev,
-                      features: featuresArray,
-                    }));
-                  }}
-                  placeholder="Enter features (e.g., Water Supply, Fenced, Road Access)"
-                  className="flex-1"
-                />
-              </div>
+              <Input
+                value={featuresInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFeaturesInput(val);
+                  const arr = val
+                    .split(",")
+                    .map((f) => f.trim())
+                    .filter((f) => f);
+                  setFormData((p) => ({ ...p, features: arr }));
+                }}
+                placeholder="e.g. Water Supply, Fenced, Road Access"
+              />
               <div className="flex flex-wrap gap-2">
-                {formData.features?.map((feature, index) => (
+                {formData.features?.map((f, i) => (
                   <Badge
-                    key={index}
+                    key={i}
                     variant="secondary"
                     className="cursor-pointer"
-                    onClick={() => removeFeature(index)}
+                    onClick={() => removeFeature(i)}
                   >
-                    {feature} <X className="w-3 h-3 ml-1" />
+                    {f} <X className="w-3 h-3 ml-1" />
                   </Badge>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
+          {/* ACTIONS */}
           <div className="flex gap-4 pt-4">
             <Button
               onClick={handleSave}
@@ -789,7 +746,10 @@ export default function EditPropertyModal({
             </Button>
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
               className="flex-1"
               size="lg"
               disabled={isSaving}
