@@ -915,7 +915,7 @@ const AdminDashboard = () => {
                           <img
                             src={
                               property.images && property.images.length > 0
-                                ? `http://localhost:5050/${property.images[0]}`
+                                ? `https://staging.chokhizameen.com/${property.images[0]}`
                                 : "https://via.placeholder.com/64"
                             }
                             alt={property.title}

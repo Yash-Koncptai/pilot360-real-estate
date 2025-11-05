@@ -73,7 +73,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/preferences",
+//         "https://staging.chokhizameen.com/api/user/preferences",
 //         {
 //           primary_purpose: preferences.purpose,
 //           budget_min: preferences.budgetRange[0],

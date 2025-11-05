@@ -69,9 +69,9 @@ export default function LandPropertyCard({
 
   const imageUrl =
     property.images?.length > 0
-      ? property.images[0].startsWith("http://localhost:5050/")
+      ? property.images[0].startsWith("https://staging.chokhizameen.com/")
         ? property.images[0]
-        : `http://localhost:5050/${property.images[0]}`
+        : `https://staging.chokhizameen.com/${property.images[0]}`
       : "/placeholder.png";
 
   useEffect(() => {

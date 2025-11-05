@@ -56,7 +56,7 @@ export default function MapPage() {
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:5050/api/user/recommendations",
+          "https://staging.chokhizameen.com/api/user/recommendations",
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -60,7 +60,7 @@
 //     setLoading(true);
 //     try {
 //       const response = await axios.get(
-//         "http://localhost:5050/api/user/recommendations",
+//         "https://staging.chokhizameen.com/api/user/recommendations",
 //         {
 //           headers: {
 //             Authorization: `Bearer ${token}`,
@@ -500,7 +500,7 @@
 //                   ...property,
 //                   isLocked: !showUnlockedView,
 //                   images: property.images.map(
-//                     (img: string) => `http://localhost:5050/${img}`
+//                     (img: string) => `https://staging.chokhizameen.com/${img}`
 //                   ),
 //                   features: property.features || [],
 //                   aiInsights: {

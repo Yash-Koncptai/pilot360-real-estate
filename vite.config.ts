@@ -31,7 +31,7 @@
 //     port: 8080,
 //     proxy: {
 //       "/api": {
-//         target: "http://localhost:5050",
+//         target: "https://staging.chokhizameen.com",
 //         changeOrigin: true,
 //         rewrite: (path) => path.replace(/^\/api/, ""),
 //       },
@@ -54,10 +54,10 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8001,
     proxy: {
       "/api": {
-        target: "http://localhost:5050",
+        target: "https://staging.chokhizameen.com",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/api"),
         // Removed rewrite rule to preserve /api prefix

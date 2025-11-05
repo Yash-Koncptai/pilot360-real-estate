@@ -72,7 +72,7 @@
 //       )}
 
 //       <img
-//         src={`http://localhost:5050/${
+//         src={`https://staging.chokhizameen.com/${
 //           property.images?.[0] || "/placeholder.svg"
 //         }`}
 //         alt={`${property.title} - ${property.location}`}

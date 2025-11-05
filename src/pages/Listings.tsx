@@ -69,7 +69,7 @@
 //           queryParams.append("primary_purpose", primaryPurpose);
 
 //         const response = await axios.get(
-//           `http://localhost:5050/api/user/properties?${queryParams.toString()}`,
+//           `https://staging.chokhizameen.com/api/user/properties?${queryParams.toString()}`,
 //           {
 //             headers: {
 //               "Content-Type": "application/json",
@@ -281,7 +281,7 @@
 //               ) : (
 //                 <>
 //                   <img
-//                     src={`http://localhost:5050/${p.images[0]}`}
+//                     src={`https://staging.chokhizameen.com/${p.images[0]}`}
 //                     alt={`${p.title}`}
 //                     className="w-full h-40 object-cover rounded-md"
 //                     onError={(e) => {

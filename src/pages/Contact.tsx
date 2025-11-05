@@ -20,7 +20,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/contact",
+//         "https://staging.chokhizameen.com/api/user/contact",
 //         {
 //           name,
 //           email,

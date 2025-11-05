@@ -45,7 +45,7 @@ export default function PropertyDetails() {
         setLoading(true);
         const token = localStorage.getItem("userToken");
         const response = await axios.get(
-          `http://localhost:5050/api/user/property?id=${id}`,
+          `https://staging.chokhizameen.com/api/user/property?id=${id}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -129,7 +129,7 @@ export default function PropertyDetails() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5050/api/user/inquiry?id=${id}`,
+        `https://staging.chokhizameen.com/api/user/inquiry?id=${id}`,
         {
           name,
           email,
@@ -243,7 +243,7 @@ export default function PropertyDetails() {
 
         <section className="grid gap-3 grid-cols-1 md:grid-cols-3">
           <img
-            src={`http://localhost:5050/${property.images[0]}`}
+            src={`https://staging.chokhizameen.com/${property.images[0]}`}
             alt={`${property.title} photo 1`}
             className="w-full h-64 object-cover rounded-md md:col-span-2"
             onError={(e) => {
@@ -258,7 +258,7 @@ export default function PropertyDetails() {
             {property.images.slice(1, 3).map((img, i) => (
               <img
                 key={i}
-                src={`http://localhost:5050/${img}`}
+                src={`https://staging.chokhizameen.com/${img}`}
                 alt={`${property.title} photo ${i + 2}`}
                 className="w-full h-30 object-cover rounded-md"
                 onError={(e) => {

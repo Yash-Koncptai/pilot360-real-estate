@@ -105,7 +105,7 @@ export default function PropertyDetailModal({
               property.images.map((image: string, index: number) => (
                 <img
                   key={index}
-                  src={`http://localhost:5050/${image}`}
+                  src={`https://staging.chokhizameen.com/${image}`}
                   alt={`${property.title} - Image ${index + 1}`}
                   className="w-full h-48 object-cover rounded-lg"
                   onError={(e) => {

@@ -53,7 +53,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/signup",
+//         "https://staging.chokhizameen.com/api/user/signup",
 //         {
 //           name: formData.name,
 //           email: formData.email,
@@ -93,7 +93,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/otp/verify",
+//         "https://staging.chokhizameen.com/api/user/otp/verify",
 //         {
 //           email: formData.email,
 //           otp: formData.otp,
@@ -133,7 +133,7 @@
 //   const handleResendOTP = async () => {
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/otp",
+//         "https://staging.chokhizameen.com/api/user/otp",
 //         {
 //           email: formData.email,
 //         },
@@ -172,7 +172,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:5050/api/user/login",
+//         "https://staging.chokhizameen.com/api/user/login",
 //         {
 //           identifier,
 //           password: formData.password,
