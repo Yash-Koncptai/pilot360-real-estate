@@ -63,7 +63,10 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/Admin";
+import RequestedProperties from "./pages/RequestedProperties"; // Import the new page
 import ProtectedRoute from "./components/ProtectedRoute";
+import ListPropertyPage from "./pages/ListPropertyPage"; // Import the new page
+import BrokerProtectedRoute from "./components/BrokerProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +125,16 @@ const App = () => (
               </Layout>
             }
           />
+<Route
+            path="/list-property"
+            element={
+              <BrokerProtectedRoute>
+                <Layout>
+                  <ListPropertyPage />
+                </Layout>
+              </BrokerProtectedRoute>
+            }
+          />
           <Route path="/admin" element={<AdminLogin />} />
           <Route
             path="/admin/dashboard"
@@ -129,6 +142,16 @@ const App = () => (
               <ProtectedRoute>
                 <LayoutAdmin>
                   <AdminDashboard />
+                </LayoutAdmin>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/requested-properties"
+            element={
+              <ProtectedRoute>
+                <LayoutAdmin>
+                  <RequestedProperties />
                 </LayoutAdmin>
               </ProtectedRoute>
             }

@@ -34,6 +34,19 @@ export type LandProperty = {
   risk_percentage?: number;
   createdAt: string;
   updatedAt: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number; // Changed to number
+  nearest_school_colleges?: string[]; // Changed to string array
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string[]; // Changed to string array
+  ownership_type?: string;
+  rera_registration?: string; // Fixed typo
+  town_planning_permit?: string; // Changed to string
+  jantri_rate?: number;
   aiInsights?: {
     matchScore?: number;
     growthPotential: "Low" | "Medium" | "High";
@@ -81,6 +94,19 @@ export type Property = {
   floorplan?: string; // Added for PropertyDetails.tsx
   createdAt: string;
   updatedAt: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number;
+  nearest_school_colleges?: string[];
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string[];
+  ownership_type?: string;
+  rera_registration?: string; // Fixed typo
+  town_planning_permit?: string;
+  jantri_rate?: number;
   aiInsights?: {
     matchScore?: number;
     growthPotential: "Low" | "Medium" | "High";

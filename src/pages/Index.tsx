@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,13 +36,14 @@ export default function Index() {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [showUnlockedView, setShowUnlockedView] = useState(false);
   const [properties, setProperties] = useState<LandProperty[]>([]);
+  const [suggestedProperties, setSuggestedProperties] = useState<LandProperty[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleOnboardingComplete = async (preferences: UserPreferences) => {
     setUserPreferences(preferences);
     setShowUnlockedView(true);
-    await fetchRecommendations(preferences);
+    await Promise.all([fetchRecommendations(preferences), fetchSuggestions()]);
   };
 
   const fetchRecommendations = async (preferences?: UserPreferences) => {
@@ -117,10 +116,63 @@ export default function Index() {
     }
   };
 
+  const fetchSuggestions = async () => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      // Don't set error for suggestions to avoid duplicate error messages
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log("Fetching suggestions from: /api/user/suggestions", { token });
+      const response = await api.get("/api/user/suggestions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Suggestions API response:", response.data);
+
+      if (response.data.success) {
+        setSuggestedProperties(response.data.properties);
+      } else {
+        toast({
+          title: "Warning",
+          description: response.data.message || "No suggested properties available.",
+          variant: "default",
+        });
+      }
+    } catch (err: any) {
+      console.error("Suggestions error details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+        url: err.config?.url,
+        baseURL: api.defaults.baseURL,
+      });
+      let errorMsg = "Failed to fetch suggestions. Please try again.";
+      if (err.response?.status === 401 || (err.response?.status === 403 && err.response?.data?.message.includes("token"))) {
+        errorMsg = "Session expired or invalid token. Please log in again.";
+        navigate("/"); // Redirect to home for re-login
+      } else if (err.response?.status === 404) {
+        errorMsg = "Suggestions endpoint not found at /api/user/suggestions.";
+      }
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || errorMsg,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (token && !userPreferences) {
       fetchRecommendations();
+      fetchSuggestions();
     }
   }, [userPreferences]);
 
@@ -501,6 +553,90 @@ export default function Index() {
                 </CardDescription>
               </CardHeader>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Property Suggestions Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Property Suggestions
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              {showUnlockedView
+                ? "Handpicked properties recommended by our experts"
+                : "Discover top properties curated by our team"}
+            </p>
+            {!showUnlockedView && (
+              <Button
+                size="lg"
+                onClick={() => setShowOnboarding(true)}
+                className="mt-4 bg-gradient-to-r from-primary to-primary/80 hover:scale-105 transition-transform"
+                disabled={loading}
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Personalize Your Experience
+              </Button>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              <p className="mt-2 text-muted-foreground">Loading suggestions...</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {suggestedProperties.length > 0 ? (
+                suggestedProperties.slice(0, 3).map((property) => (
+                  <LandPropertyCard
+                    key={property.id}
+                    property={{
+                      ...property,
+                      isLocked: !showUnlockedView,
+                      images: property.images.map(
+                        (img: string) =>
+                          img.startsWith("http")
+                            ? img
+                            : `${api.defaults.baseURL}/${img}`
+                      ),
+                      features: property.features || [],
+                      aiInsights: {
+                        matchScore: property.matchPercentage || 0,
+                        growthPotential: property.aiInsights?.growthPotential || "Medium",
+                        expectedROI: property.aiInsights?.expectedROI || "10-12% annually",
+                        riskLevel: property.aiInsights?.riskLevel || "Low",
+                        demandIndicators: {
+                          viewsThisWeek: property.views || 0,
+                          nearbyDevelopments:
+                            property.aiInsights?.demandIndicators?.nearbyDevelopments || [],
+                        },
+                      },
+                    }}
+                    showFullDetails={showUnlockedView}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center text-muted-foreground">
+                  {showUnlockedView
+                    ? "No properties suggested by admins yet."
+                    : "Sign in and set your preferences to unlock personalized suggestions."}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Button
+              size="lg"
+              onClick={() => navigate("/map")}
+              className="hover:scale-105 transition-transform"
+              disabled={loading}
+            >
+              Explore More Properties
+            </Button>
           </div>
         </div>
       </section>

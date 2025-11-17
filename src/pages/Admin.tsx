@@ -1,6 +1,5 @@
-
-
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -98,6 +97,19 @@ interface Property {
   images: string[] | null;
   createdAt: string;
   updatedAt: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number;
+  nearest_school_colleges?: string;
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string;
+  ownership_type?: string;
+  rera_restration?: string; // Changed to string
+  town_planning_permit?: string; // Changed to string
+  jantri_rate?: number;
 }
 
 interface DashboardData {
@@ -152,7 +164,7 @@ interface ScheduledVisit {
     size: string;
     primary_purpose: string;
     location: string;
-  } | null; // Allow null for property
+  } | null;
 }
 
 interface UserSuggestions {
@@ -371,7 +383,7 @@ const AdminDashboard = () => {
     fetchAnalyticsData();
   }, [navigate]);
 
-  /* Users & Properties */
+  /* Users */
   useEffect(() => {
     const fetchUsersData = async () => {
       const token = localStorage.getItem("adminToken");
@@ -380,7 +392,6 @@ const AdminDashboard = () => {
         return;
       }
       try {
-        setIsPropertiesLoading(true);
         const response = await api.get("/api/admin/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -408,9 +419,6 @@ const AdminDashboard = () => {
           });
           setReferralCodeToNameMap(referralMap);
 
-          const fetchedProperties = response.data.properties || [];
-          setProperties(Array.isArray(fetchedProperties) ? fetchedProperties : []);
-
           const initialSuggestions: UserSuggestions = {};
           normalizedUsers.forEach((user) => {
             initialSuggestions[user.id] = [];
@@ -418,20 +426,45 @@ const AdminDashboard = () => {
           setUserSuggestions(initialSuggestions);
         } else {
           toast.error(response.data.message || "Failed to fetch users data.");
-          setProperties([]);
           setUsers([]);
           setReferralCodeToNameMap({});
         }
       } catch (err: any) {
         handleAuthError(err);
-        setProperties([]);
         setUsers([]);
         setReferralCodeToNameMap({});
+      }
+    };
+    fetchUsersData();
+  }, [navigate]);
+
+  /* Properties */
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        navigate("/admin", { replace: true });
+        return;
+      }
+      try {
+        setIsPropertiesLoading(true);
+        const response = await api.get("/api/admin/property", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data.success) {
+          setProperties(Array.isArray(response.data.properties) ? response.data.properties : []);
+        } else {
+          toast.error(response.data.message || "Failed to fetch properties.");
+          setProperties([]);
+        }
+      } catch (err: any) {
+        handleAuthError(err);
+        setProperties([]);
       } finally {
         setIsPropertiesLoading(false);
       }
     };
-    fetchUsersData();
+    fetchProperties();
   }, [navigate]);
 
   /* Inquiries (Scheduled Visits) */
@@ -464,7 +497,7 @@ const AdminDashboard = () => {
                   primary_purpose: inquiry.property.primary_purpose,
                   location: inquiry.property.location,
                 }
-              : null, // Handle null property
+              : null,
           }));
           setScheduledVisits(inquiries);
         } else {
@@ -582,8 +615,8 @@ const AdminDashboard = () => {
       payload.append("longitude", formData.longitude.toString());
       payload.append("description", formData.description);
       payload.append("privacy", formData.private.toString());
-      if (formData.investment_gain !== undefined) payload.append("investment_gain", formData.investment_gain.toString());
-      if (formData.return_of_investment !== undefined) payload.append("return_of_investment", formData.return_of_investment.toString());
+      if (formData.investment_gain !== undefined)
+        payload.append("investment_gain", formData.investment_gain.toString());
       payload.append("water_connectivity", formData.water_connectivity ? "true" : "false");
       payload.append("electricity_connectivity", formData.electricity_connectivity ? "true" : "false");
       payload.append("gas_connectivity", formData.gas_connectivity ? "true" : "false");
@@ -592,13 +625,32 @@ const AdminDashboard = () => {
       payload.append("financial_risk", formData.financial_risk ? "true" : "false");
       payload.append("liquidity_risk", formData.liquidity_risk ? "true" : "false");
       payload.append("physical_risk", formData.physical_risk ? "true" : "false");
-      if (formData.features?.length) payload.append("features", formData.features.join(","));
+      if (formData.features?.length)
+        payload.append("features", formData.features.join(","));
+      if (formData.taluka) payload.append("taluka", formData.taluka);
+      if (formData.district) payload.append("district", formData.district);
+      if (formData.nearest_town) payload.append("nearest_town", formData.nearest_town);
+      if (formData.nearest_road) payload.append("nearest_road", formData.nearest_road);
+      if (formData.distance_to_nearest_road !== undefined)
+        payload.append("distance_to_nearest_road", formData.distance_to_nearest_road.toString());
+      if (formData.nearest_school_colleges)
+        payload.append("nearest_school_colleges", formData.nearest_school_colleges);
+      if (formData.zoning_status) payload.append("zoning_status", formData.zoning_status);
+      payload.append("na_permit", formData.na_permit ? "yes" : "no"); // Changed to yes/no
+      if (formData.upcoming_infra) payload.append("upcoming_infra", formData.upcoming_infra);
+      if (formData.ownership_type) payload.append("ownership_type", formData.ownership_type);
+      if (formData.rera_restration) payload.append("rera_restration", formData.rera_restration);
+      if (formData.town_planning_permit) payload.append("town_planning_permit", formData.town_planning_permit);
+      if (formData.jantri_rate !== undefined)
+        payload.append("jantri_rate", formData.jantri_rate.toString());
 
       if (formData.images) {
         formData.images.forEach((img: any) => img instanceof File && payload.append("images", img));
       }
-      if (formData.id && formData.existingImages) payload.append("existingimages", formData.existingImages.join(","));
-      if (formData.id && formData.deletedImages) payload.append("deletedimages", formData.deletedImages.join(","));
+      if (formData.id && formData.existingImages)
+        payload.append("existingimages", formData.existingImages.join(","));
+      if (formData.id && formData.deletedImages)
+        payload.append("deletedimages", formData.deletedImages.join(","));
 
       const url = formData.id
         ? `/api/admin/property/update?id=${formData.id}`
@@ -635,7 +687,16 @@ const AdminDashboard = () => {
       p.title.toLowerCase().includes(q) ||
       p.location.toLowerCase().includes(q) ||
       p.size.toLowerCase().includes(q) ||
-      p.type.toLowerCase().includes(q)
+      p.type.toLowerCase().includes(q) ||
+      (p.taluka && p.taluka.toLowerCase().includes(q)) ||
+      (p.district && p.district.toLowerCase().includes(q)) ||
+      (p.nearest_town && p.nearest_town.toLowerCase().includes(q)) ||
+      (p.nearest_road && p.nearest_road.toLowerCase().includes(q)) ||
+      (p.nearest_school_colleges && p.nearest_school_colleges.toLowerCase().includes(q)) ||
+      (p.zoning_status && p.zoning_status.toLowerCase().includes(q)) ||
+      (p.upcoming_infra && p.upcoming_infra.toLowerCase().includes(q)) ||
+      (p.ownership_type && p.ownership_type.toLowerCase().includes(q)) ||
+      (p.rera_restration && p.rera_restration.toLowerCase().includes(q))
     );
   }, [properties, searchQuery]);
 
@@ -687,6 +748,14 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2">
             <Button onClick={handleAddProperty} className="bg-gradient-to-r from-primary to-secondary hover:opacity-90">
               <Plus className="w-4 h-4 mr-2" /> Add Property
+            </Button>
+            <Button
+              asChild
+              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+            >
+              <Link to="/admin/requested-properties">
+                <MapPin className="w-4 h-4 mr-2" /> Requested Properties
+              </Link>
             </Button>
             <Button variant="outline" onClick={handleLogout} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
               <LogOut className="w-4 h-4 mr-2" /> Logout
@@ -904,7 +973,6 @@ const AdminDashboard = () => {
                   <CardTitle>User Management & Property Suggestions</CardTitle>
                   <CardDescription>Manage user accounts and suggest properties</CardDescription>
                 </div>
-
                 <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
                   <DialogTrigger asChild>
                     <Button onClick={resetAddUserForm}>
@@ -969,29 +1037,34 @@ const AdminDashboard = () => {
                     {users.map((user) => (
                       <Card key={user.id} className="p-4">
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{user.name}</h3>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <p className="text-sm text-muted-foreground">Mobile: {user.mobile || "N/A"}</p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              <Badge
-                                variant={
-                                  user.role === "admin"
-                                    ? "default"
-                                    : user.role === "broker"
-                                    ? "secondary"
-                                    : "outline"
-                                }
-                              >
-                                {user.role === "admin" ? "Admin" : user.role === "broker" ? "Broker" : "User"}
-                              </Badge>
-                              <Badge variant={user.status === "active" ? "default" : "destructive"}>
-                                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                              </Badge>
-                              <Badge variant="outline">Referral: {user.referral_code}</Badge>
-                              <Badge variant="outline">
-                                Referred By: {user.referred_by ? referralCodeToNameMap[user.referred_by] || user.referred_by : "-"}
-                              </Badge>
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h3 className="font-semibold">{user.name}</h3>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                              <p className="text-sm text-muted-foreground">Mobile: {user.mobile || "N/A"}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Role: <span className="capitalize">{user.role}</span></p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Badge
+                                  variant={
+                                    user.role === "admin"
+                                      ? "default"
+                                      : user.role === "broker"
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                >
+                                  {user.role === "admin" ? "Admin" : user.role === "broker" ? "Broker" : "Regular User"}
+                                </Badge>
+                                <Badge variant={user.status === "active" ? "default" : "destructive"}>
+                                  {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                                </Badge>
+                                <Badge variant="outline">Referral: {user.referral_code}</Badge>
+                                <Badge variant="outline">
+                                  Referred By: {user.referred_by ? referralCodeToNameMap[user.referred_by] || user.referred_by : "-"}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -1038,11 +1111,7 @@ const AdminDashboard = () => {
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1">
                                     <span>Investment Gain: </span>
-                                    <span>{property.investment_gain ? `${property.investment_gain}%` : "N/A"}</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    <span>Return on Investment: </span>
-                                    <span>{property.return_of_investment ? `${property.return_of_investment}%` : "N/A"}</span>
+                                    <span>{property.investment_gain ? `₹${formatPriceDisplay(property.investment_gain)}` : "N/A"}</span>
                                   </div>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {property.water_connectivity && <Badge variant="outline"><Droplet className="w-3 h-3 mr-1" /> Water</Badge>}

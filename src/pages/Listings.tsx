@@ -1,5 +1,3 @@
-
-
 import Seo from "@/components/Seo";
 import { LandProperty } from "@/data/landProperties";
 import PropertyCard from "@/components/PropertyCard";
@@ -141,6 +139,9 @@ export default function Listings() {
                 img.startsWith("http") ? img : `${api.defaults.baseURL}/${img}`
             ),
             features: p.features || [],
+            rera_registration: p.rera_restration || p.rera_registration, // Handle typo
+            nearest_school_colleges: p.nearest_school_colleges || [],
+            upcoming_infra: p.upcoming_infra || [],
           })
         );
         setProperties(mappedProperties);
@@ -180,6 +181,19 @@ export default function Listings() {
             risk_percentage: 15,
             createdAt: "2025-01-01",
             updatedAt: "2025-01-01",
+            taluka: "Daskroi",
+            district: "Ahmedabad",
+            nearest_town: "Bopal",
+            nearest_road: "SP Ring Road",
+            distance_to_nearest_road: 1,
+            nearest_school_colleges: ["DPS Bopal"],
+            zoning_status: "Agricultural",
+            na_permit: false,
+            upcoming_infra: ["Metro Station"],
+            ownership_type: "Freehold",
+            rera_registration: "Not registered",
+            town_planning_permit: "Not Approved",
+            jantri_rate: 1000,
           },
           {
             id: 2,
@@ -210,6 +224,19 @@ export default function Listings() {
             risk_percentage: 35,
             createdAt: "2025-01-02",
             updatedAt: "2025-01-02",
+            taluka: "Gota",
+            district: "Ahmedabad",
+            nearest_town: "Gota",
+            nearest_road: "SG Highway",
+            distance_to_nearest_road: 0.5,
+            nearest_school_colleges: ["Nirma University"],
+            zoning_status: "Commercial",
+            na_permit: true,
+            upcoming_infra: ["Highway Expansion"],
+            ownership_type: "Leasehold",
+            rera_registration: "PR/GJ/AHMEDABAD/12345",
+            town_planning_permit: "Approved",
+            jantri_rate: 8500,
           },
           {
             id: 3,
@@ -240,6 +267,19 @@ export default function Listings() {
             risk_percentage: 25,
             createdAt: "2025-01-03",
             updatedAt: "2025-01-03",
+            taluka: "Sanand",
+            district: "Ahmedabad",
+            nearest_town: "Sanand",
+            nearest_road: "NH 47",
+            distance_to_nearest_road: 3,
+            nearest_school_colleges: ["Sanand Public School"],
+            zoning_status: "Residential",
+            na_permit: false,
+            upcoming_infra: ["Industrial Park"],
+            ownership_type: "Freehold",
+            rera_registration: "Not registered",
+            town_planning_permit: "Not Approved",
+            jantri_rate: 500,
           },
         ];
 
@@ -336,7 +376,7 @@ export default function Listings() {
             disabled={loading}
           >
             <SelectTrigger id="primary-purpose">
-              <SelectValue placeholder ="Primary Purpose" />
+              <SelectValue placeholder="Primary Purpose" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="any">Any</SelectItem>
@@ -463,7 +503,7 @@ export default function Listings() {
               ) : (
                 <>
                   <img
-                    src={`http://localhost:5000/${p.images[0]}`}
+                    src={`http://localhost:5050/${p.images[0]}`}
                     alt={`${p.title}`}
                     className="w-full h-40 object-cover rounded-md"
                     onError={(e) => {

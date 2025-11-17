@@ -1,4 +1,3 @@
-
 import Seo from "@/components/Seo";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -176,88 +175,133 @@ export default function MapPage() {
 
     const bounds = new mapboxgl.LngLatBounds();
 
-    // Add property markers
-    filteredProperties.forEach((property: any) => {
-      const formatPrice = (value: number) => {
-        if (value >= 10000000) {
-          return `₹${(value / 10000000).toFixed(1)}Cr`;
-        }
-        return `₹${(value / 100000).toFixed(0)}L`;
+    // Add property markers as circles
+    map.on("load", () => {
+      // Create a GeoJSON source for properties
+      const geojson: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: filteredProperties.map((property: any) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [property.longitude, property.latitude],
+          },
+          properties: {
+            id: property.id,
+            title: property.title,
+            price: property.price,
+            location: property.location,
+            type: property.type,
+            size: property.size,
+            aiMatchScore: property.aiMatchScore,
+            growthPotential: property.aiInsights?.growthPotential || "Medium",
+            expectedROI: property.aiInsights?.expectedROI || "",
+            riskLevel: property.aiInsights?.riskLevel || "",
+            viewsThisWeek:
+              property.aiInsights?.demandIndicators.viewsThisWeek || 0,
+          },
+        })),
       };
 
-      const popupHtml = `
-        <div style="max-width:320px;" class="p-3">
-          <div class="flex items-start justify-between mb-2">
-            <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${
-              property.title
-            }</h3>
-            <div style="display:flex;gap:4px;flex-direction:column;align-items:end;">
-              ${
-                property.aiInsights?.growthPotential === "High"
-                  ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ High Growth</span>'
-                  : ""
-              }
-              <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${
-                property.aiMatchScore
-              }% Match</span>
-            </div>
-          </div>
-          <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(
-            property.price
-          )}</div>
-          <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${
-            property.location
-          }</div>
-          <div style="display:flex;gap:6px;margin-bottom:12px;">
-            <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${
-              property.type
-            }</span>
-            <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${
-              property.size
-            }</span>
-          </div>
-          ${
-            property.aiInsights
-              ? `
-            <div style="border-top:1px solid hsl(var(--border));padding-top:8px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <span style="font-size:12px;color:hsl(var(--muted-foreground));">Expected ROI</span>
-                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.expectedROI}</span>
+      // Add source
+      map.addSource("properties", {
+        type: "geojson",
+        data: geojson,
+      });
+
+      // Add circle layer
+      map.addLayer({
+        id: "property-circles",
+        type: "circle",
+        source: "properties",
+        paint: {
+          "circle-radius": 10,
+          "circle-color": [
+            "match",
+            ["get", "growthPotential"],
+            "High",
+            "#10B981", // Green
+            "Medium",
+            "#F59E0B", // Yellow
+            "Low",
+            "#EF4444", // Red
+            "#3B82F6", // Default blue
+          ],
+          "circle-opacity": 0.8,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+        },
+      });
+
+      // Popup on click
+      map.on("click", "property-circles", (e) => {
+        const features = e.features;
+        if (!features || !features[0]) return;
+
+        const properties = features[0].properties;
+        const coordinates = (features[0].geometry as GeoJSON.Point).coordinates.slice();
+
+        const formatPrice = (value: number) => {
+          if (value >= 10000000) {
+            return `₹${(value / 10000000).toFixed(1)}Cr`;
+          }
+          return `₹${(value / 100000).toFixed(0)}L`;
+        };
+
+        const popupHtml = `
+          <div style="max-width:320px;" class="p-3">
+            <div class="flex items-start justify-between mb-2">
+              <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${properties.title}</h3>
+              <div style="display:flex;gap:4px;flex-direction:column;align-items-end;">
+                ${
+                  properties.growthPotential === "High"
+                    ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ High Growth</span>'
+                    : ""
+                }
+                <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${properties.aiMatchScore}% Match</span>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            </div>
+            <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(properties.price)}</div>
+            <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${properties.location}</div>
+            <div style="display:flex;gap:6px;margin-bottom:12px;">
+              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${properties.type}</span>
+              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${properties.size}</span>
+            </div>
+            <div style="border-top:1px solid hsl(var(--border));padding-top:8px;">
+              <div style="display:flex;justify-content:space-between;align-items-center;margin-bottom:4px;">
+                <span style="font-size:12px;color:hsl(var(--muted-foreground));">Expected ROI</span>
+                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${properties.expectedROI}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items-center;margin-bottom:4px;">
                 <span style="font-size:12px;color:hsl(var(--muted-foreground));">Growth Potential</span>
-                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.growthPotential}</span>
+                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${properties.growthPotential}</span>
               </div>
               <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
-                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">👁️ ${property.aiInsights.demandIndicators.viewsThisWeek} views</span>
-                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${property.aiInsights.riskLevel} Risk</span>
+                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">👁️ ${properties.viewsThisWeek} views</span>
+                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${properties.riskLevel} Risk</span>
               </div>
             </div>
-          `
-              : ""
-          }
-          <button onclick="window.location.href='/property/${
-            property.id
-          }'" style="width:100%;margin-top:12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">View Details</button>
-        </div>
-      `;
+            <button onclick="window.location.href='/property/${properties.id}'" style="width:100%;margin-top:12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">View Details</button>
+          </div>
+        `;
 
-      const popup = new mapboxgl.Popup({
-        offset: 15,
-        maxWidth: "320px",
-      }).setHTML(popupHtml);
+        new mapboxgl.Popup()
+          .setLngLat(coordinates as [number, number])
+          .setHTML(popupHtml)
+          .addTo(map);
+      });
 
-      // Custom marker color based on growth potential
-      let markerColor = "#3B82F6"; // Default blue
-      if (property.aiInsights?.growthPotential === "High") markerColor = "#10B981"; // Green for high
-      else if (property.aiInsights?.growthPotential === "Medium") markerColor = "#F59E0B"; // Yellow for medium
-      else if (property.aiInsights?.growthPotential === "Low") markerColor = "#EF4444"; // Red for low
+      // Change cursor to pointer on hover
+      map.on("mouseenter", "property-circles", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "property-circles", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    });
 
-      new mapboxgl.Marker({ color: markerColor })
-        .setLngLat([property.longitude, property.latitude])
-        .setPopup(popup)
-        .addTo(map);
-
+    // Extend bounds for all properties
+    filteredProperties.forEach((property: any) => {
       bounds.extend([property.longitude, property.latitude]);
     });
 
@@ -328,12 +372,12 @@ export default function MapPage() {
       purpose: "buy",
       propertyTypes: [],
       budgetRange: [0, 50000000],
-      location: '',
-      size: 'any',
+      location: "",
+      size: "any",
       sqftRange: [0, 5000],
-      commute: '',
+      commute: "",
       amenities: [],
-      aiSearch: ''
+      aiSearch: "",
     });
   };
 
@@ -403,24 +447,15 @@ export default function MapPage() {
           {/* Map Controls Info */}
           <div className="p-4 border-b border-border">
             <div className="flex flex-wrap gap-2 text-sm">
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
+              <Badge variant="secondary" className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 High Potential
               </Badge>
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
+              <Badge variant="secondary" className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 Medium Potential
               </Badge>
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
+              <Badge variant="secondary" className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 Low Potential
               </Badge>
