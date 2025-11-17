@@ -35,6 +35,7 @@ const AuthModal = ({
     password: "",
     otp: "",
     referral: "",
+    role: "Regular User",
   });
   const [signinMethod, setSigninMethod] = useState<"email" | "mobile">("email");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +62,8 @@ const AuthModal = ({
         mobile: "",
         password: "",
         otp: "",
-        referral: formData.referral || "", // keep pre-filled ref
+        referral: formData.referral || "",
+        role: "Regular User",
       });
     }
   }, [open, initialStep]);
@@ -161,13 +163,13 @@ const AuthModal = ({
             name: formData.name,
             email: formData.email,
             mobile: formData.mobile,
+            role: "Regular User",
             referralCode: response.data.referralCode,
           })
         );
 
         let token = response.data.token;
         if (!token) {
-          // Fallback: Attempt automatic login if no token is returned
           const loginResponse = await api.post(
             "/api/user/login",
             { identifier: formData.email, password: formData.password },
@@ -182,10 +184,10 @@ const AuthModal = ({
 
         localStorage.setItem("userToken", token);
 
-        onAuthChange?.(true); // Notify parent of successful login
+        onAuthChange?.(true);
         onOpenChange(false);
         setAuthStep("signin");
-        setFormData({ name: "", email: "", mobile: "", password: "", otp: "", referral: "" });
+        setFormData({ name: "", email: "", mobile: "", password: "", otp: "", referral: "", role: "Regular User" });
       }
     } catch (err: any) {
       let message = "Invalid or expired OTP.";
@@ -200,7 +202,7 @@ const AuthModal = ({
         description: message,
         variant: "destructive",
       });
-      onAuthChange?.(false); // Notify parent of failed login
+      onAuthChange?.(false);
     } finally {
       setIsLoading(false);
     }
@@ -270,15 +272,16 @@ const AuthModal = ({
         localStorage.setItem(
           "userData",
           JSON.stringify({
-            name: response.data.user?.name || "",
-            email: response.data.user?.email || "",
-            mobile: response.data.user?.mobile || "",
+            name: response.data.user?.name || "", // Fallback for name
+            email: response.data.user?.email || identifier, // Use identifier as email
+            mobile: response.data.user?.mobile || (signinMethod === "mobile" ? identifier : ""),
+            role: response.data.role || "Regular User" // Use root-level role
           })
         );
 
-        onAuthChange?.(true); // Notify parent of successful login
+        onAuthChange?.(true);
         onOpenChange(false);
-        setFormData({ name: "", email: "", mobile: "", password: "", otp: "", referral: "" });
+        setFormData({ name: "", email: "", mobile: "", password: "", otp: "", referral: "", role: "Regular User" });
       }
     } catch (err: any) {
       let message = "Invalid credentials.";
@@ -295,7 +298,7 @@ const AuthModal = ({
         description: err.response?.data?.message || message,
         variant: "destructive",
       });
-      onAuthChange?.(false); // Notify parent of failed login
+      onAuthChange?.(false);
     } finally {
       setIsLoading(false);
     }

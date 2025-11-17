@@ -1,4 +1,5 @@
 
+
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ReactNode, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,12 +17,23 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const [authInitialStep, setAuthInitialStep] = useState<"signup" | "signin">("signin");
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<"Regular User" | "Broker" | null>(null);
   const location = useLocation();
 
-  // Check initial auth status
+  // Check auth status and user role
   useEffect(() => {
     const checkAuthStatus = () => {
-      setIsUserLoggedIn(localStorage.getItem("userAuth") === "true");
+      const auth = localStorage.getItem("userAuth") === "true";
+      setIsUserLoggedIn(auth);
+
+      if (auth) {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        console.log("User Data:", userData); // Debug log
+        console.log("User Role:", userData.role); // Debug log
+        setUserRole(userData.role || null);
+      } else {
+        setUserRole(null);
+      }
     };
 
     checkAuthStatus();
@@ -60,6 +72,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("userData");
     localStorage.removeItem("userToken");
     setIsUserLoggedIn(false);
+    setUserRole(null);
     setConfirmationModalOpen(false);
     toast.success("Signed out successfully.");
   };
@@ -67,7 +80,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
   // Callback to handle auth state changes from AuthModal
   const handleAuthChange = (isLoggedIn: boolean) => {
     setIsUserLoggedIn(isLoggedIn);
+    if (isLoggedIn) {
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      console.log("Auth Change - User Role:", userData.role); // Debug log
+      setUserRole(userData.role || null);
+    } else {
+      setUserRole(null);
+    }
   };
+
+  // Show "List your property" button if not logged in or if user is Broker
+  const showListPropertyButton = !isUserLoggedIn || (userRole && userRole.toLowerCase() === "broker");
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -76,7 +99,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="text-lg">EstateHub</span>
+            <span className="text-lg">Chokhizameen</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -101,7 +124,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             </NavLink>
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons + Conditional List Property Button */}
           <div className="flex items-center gap-2">
             {isUserLoggedIn ? (
               <Button onClick={handleLogout} variant="outline">
@@ -117,9 +140,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 </Button>
               </>
             )}
-            <Button asChild variant="default" className="hover-scale">
-              <Link to="/contact">List your property</Link>
-            </Button>
+
+            {/* Show "List your property" for non-logged-in users or Brokers */}
+            {showListPropertyButton && (
+              <Button asChild variant="default" className="hover-scale">
+                <Link to="/list-property">List your property</Link>
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -130,7 +157,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       {/* Footer */}
       <footer className="border-t">
         <div className="container py-6 text-sm text-muted-foreground flex flex-col md:flex-row items-center justify-between gap-2">
-          <p>© {new Date().getFullYear()} EstateHub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Chokhizameen. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link to="/about" className="hover:underline">
               About
@@ -150,7 +177,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
         initialStep={authInitialStep}
-        onAuthChange={handleAuthChange} // Pass the callback
+        onAuthChange={handleAuthChange}
       />
 
       <ConfirmationModal

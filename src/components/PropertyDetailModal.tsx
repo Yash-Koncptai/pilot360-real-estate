@@ -1,33 +1,28 @@
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   MapPin,
   Ruler,
   DollarSign,
-  Star,
-  Calendar,
-  Shield,
   Target,
+  Shield,
   Droplet,
   Zap,
   Flame,
   TrendingUp,
   Gavel,
-  DollarSign as FinancialIcon,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
 
 interface Property {
-  id?: string;
+  id: string;
   title: string;
   price: number;
   type: string;
@@ -39,6 +34,7 @@ interface Property {
   description: string;
   private: boolean;
   investment_gain?: number;
+  return_of_investment?: number;
   water_connectivity?: boolean;
   electricity_connectivity?: boolean;
   gas_connectivity?: boolean;
@@ -47,11 +43,24 @@ interface Property {
   financial_risk?: boolean;
   liquidity_risk?: boolean;
   physical_risk?: boolean;
+  risk_percentage?: number;
   features: string[] | null;
   images: string[] | null;
-  views: number | null;
   createdAt: string;
   updatedAt: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number;
+  nearest_school_colleges?: string;
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string;
+  ownership_type?: string;
+  rera_restration?: string;
+  town_planning_permit?: string;
+  jantri_rate?: number;
 }
 
 interface PropertyDetailModalProps {
@@ -72,13 +81,15 @@ export default function PropertyDetailModal({
     return `₹${(value / 100000).toFixed(1)}L`;
   };
 
-  const formatPriceDisplay = (value: number) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
+  const formatPriceDisplay = (value: number) =>
+    value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  const handleAction = (action: string) => {
-    toast.info(`Action "${action}" is not yet implemented.`);
-  };
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -94,7 +105,7 @@ export default function PropertyDetailModal({
         <p id="property-detail-description" className="sr-only">
           Detailed information about the property including price, size, primary
           purpose, location, coordinates, description, private status,
-          investment gain, connectivity, risks, features, images, views, and
+          investment gain, connectivity, risks, features, images, and
           creation/update dates.
         </p>
 
@@ -109,7 +120,6 @@ export default function PropertyDetailModal({
                   alt={`${property.title} - Image ${index + 1}`}
                   className="w-full h-48 object-cover rounded-lg"
                   onError={(e) => {
-                    console.error("Image load failed:", e.currentTarget.src);
                     e.currentTarget.src = "https://via.placeholder.com/300";
                   }}
                 />
@@ -177,8 +187,7 @@ export default function PropertyDetailModal({
               <CardContent>
                 <div className="text-lg font-semibold">{property.location}</div>
                 <p className="text-xs text-muted-foreground">
-                  {property.latitude.toFixed(4)},{" "}
-                  {property.longitude.toFixed(4)}
+                  {property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}
                 </p>
               </CardContent>
             </Card>
@@ -207,12 +216,231 @@ export default function PropertyDetailModal({
               <CardContent>
                 <div className="text-lg font-semibold">
                   {property.investment_gain
-                    ? `${property.investment_gain}%`
+                    ? `₹${formatPriceDisplay(property.investment_gain)}`
                     : "N/A"}
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-medium ml-2">
+                  Return on Investment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold">
+                  {property.return_of_investment
+                    ? `${property.return_of_investment}%`
+                    : "N/A"}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-medium ml-2">
+                  Created At
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold">
+                  {formatDate(property.createdAt)}
+                </div>
+              </CardContent>
+            </Card>
           </div>
+
+          {/* Location Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Location Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Taluka
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.taluka || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    District
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.district || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Nearest Town
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.nearest_town || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Nearest Road
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.nearest_road || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Distance to Road
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.distance_to_nearest_road
+                      ? `${property.distance_to_nearest_road} km`
+                      : "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Schools/Colleges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.nearest_school_colleges || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+
+          {/* Property Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Zoning Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.zoning_status || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    NA Permit
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.na_permit ? "Yes" : "No"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Ownership Type
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.ownership_type || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    RERA Registration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.rera_restration || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Town Planning Permit
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.town_planning_permit || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Jantri Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.jantri_rate ? `₹${property.jantri_rate}` : "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-sm font-medium ml-2">
+                    Upcoming Infrastructure
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold">
+                    {property.upcoming_infra || "N/A"}
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
 
           {/* Connectivity */}
           <div className="grid md:grid-cols-3 gap-6">
@@ -291,7 +519,7 @@ export default function PropertyDetailModal({
 
             <Card>
               <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-                <FinancialIcon className="w-4 h-4 text-primary" />
+                <DollarSign className="w-4 h-4 text-primary" />
                 <CardTitle className="text-sm font-medium ml-2">
                   Financial Risk
                 </CardTitle>
@@ -327,6 +555,20 @@ export default function PropertyDetailModal({
               <CardContent>
                 <div className="text-lg font-semibold">
                   {property.physical_risk ? "Yes" : "No"}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                <AlertTriangle className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-medium ml-2">
+                  Risk Percentage
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold">
+                  {property.risk_percentage ? `${property.risk_percentage}%` : "N/A"}
                 </div>
               </CardContent>
             </Card>

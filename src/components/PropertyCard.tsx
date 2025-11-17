@@ -36,30 +36,30 @@ export default function PropertyCard({
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-  const isSignedIn = !!localStorage.getItem("userToken");
-  if (isSignedIn) {
-    navigate(`/property/${property.id}`);
-  } else {
-    setTargetPropertyId(property.id.toString());
-    setAuthModalOpen(true);
-    toast({
-      title: "Authentication Required",
-      description: (
-        <div>
-          You are signed out.{" "}
-          <button
-            onClick={() => setAuthModalOpen(true)}
-            className="underline text-primary font-medium"
-          >
-            Sign in first
-          </button>
-          .
-        </div>
-      ),
-      variant: "destructive",
-    });
-  }
-};
+    const isSignedIn = !!localStorage.getItem("userToken");
+    if (isSignedIn) {
+      navigate(`/property/${property.id}`);
+    } else {
+      setTargetPropertyId(property.id.toString());
+      setAuthModalOpen(true);
+      toast({
+        title: "Authentication Required",
+        description: (
+          <div>
+            You are signed out.{" "}
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="underline text-primary font-medium"
+            >
+              Sign in first
+            </button>
+            .
+          </div>
+        ),
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
@@ -151,6 +151,101 @@ export default function PropertyCard({
             </div>
           )}
         </div>
+
+        {/* Collapsible Property Details Section */}
+        <details className="space-y-2 p-3 bg-secondary/10 rounded-lg">
+          <summary className="text-sm font-semibold cursor-pointer">
+            Property Details
+          </summary>
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Taluka:</span>
+              <span className="font-medium">
+                {property.taluka || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">District:</span>
+              <span className="font-medium">
+                {property.district || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Town:</span>
+              <span className="font-medium">
+                {property.nearest_town || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Road:</span>
+              <span className="font-medium">
+                {property.nearest_road || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Distance to Road:</span>
+              <span className="font-medium">
+                {property.distance_to_nearest_road != null
+                  ? `${property.distance_to_nearest_road} km`
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Schools/Colleges:</span>
+              <span className="font-medium">
+                {property.nearest_school_colleges?.length
+                  ? property.nearest_school_colleges.join(", ")
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Zoning Status:</span>
+              <span className="font-medium">
+                {property.zoning_status || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">NA Permit:</span>
+              <span className="font-medium">
+                {property.na_permit ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Upcoming Infra:</span>
+              <span className="font-medium">
+                {property.upcoming_infra?.length
+                  ? property.upcoming_infra.join(", ")
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Ownership Type:</span>
+              <span className="font-medium">
+                {property.ownership_type || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">RERA Registration:</span>
+              <span className="font-medium">
+                {property.rera_registration || "Not registered"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Town Planning Permit:</span>
+              <span className="font-medium">
+                {property.town_planning_permit || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Jantri Rate:</span>
+              <span className="font-medium">
+                {property.jantri_rate != null
+                  ? formatPrice(property.jantri_rate) + " per sq ft"
+                  : "Not specified"}
+              </span>
+            </div>
+          </div>
+        </details>
       </CardContent>
       <CardFooter>
         <Button

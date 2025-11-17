@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -39,6 +40,7 @@ interface Property {
   description: string;
   private: boolean;
   investment_gain?: number;
+  return_of_investment?: number;
   water_connectivity?: boolean;
   electricity_connectivity?: boolean;
   gas_connectivity?: boolean;
@@ -47,11 +49,24 @@ interface Property {
   financial_risk?: boolean;
   liquidity_risk?: boolean;
   physical_risk?: boolean;
+  risk_percentage?: number;
   features: string[] | null;
   images: string[] | null;
-  views: number | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number;
+  nearest_school_colleges?: string;
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string;
+  ownership_type?: string;
+  rera_restration?: string;
+  town_planning_permit?: string;
+  jantri_rate?: number;
 }
 
 interface EditPropertyModalProps {
@@ -75,7 +90,6 @@ export default function EditPropertyModal({
 }: EditPropertyModalProps) {
   // STATE
   const [formData, setFormData] = useState<Property>({
-    id: "",
     title: "",
     price: 0,
     type: "Agricultural",
@@ -86,7 +100,8 @@ export default function EditPropertyModal({
     longitude: 0,
     description: "",
     private: false,
-    investment_gain: 0,
+    investment_gain: undefined,
+    return_of_investment: undefined,
     water_connectivity: false,
     electricity_connectivity: false,
     gas_connectivity: false,
@@ -95,11 +110,22 @@ export default function EditPropertyModal({
     financial_risk: false,
     liquidity_risk: false,
     physical_risk: false,
+    risk_percentage: undefined,
     features: [],
     images: [],
-    views: null,
-    createdAt: "",
-    updatedAt: "",
+    taluka: "",
+    district: "",
+    nearest_town: "",
+    nearest_road: "",
+    distance_to_nearest_road: undefined,
+    nearest_school_colleges: "",
+    zoning_status: "",
+    na_permit: false,
+    upcoming_infra: "",
+    ownership_type: "",
+    rera_restration: "",
+    town_planning_permit: "",
+    jantri_rate: undefined,
   });
 
   const [displayPrice, setDisplayPrice] = useState("");
@@ -136,13 +162,31 @@ export default function EditPropertyModal({
   // EFFECTS
   useEffect(() => {
     if (property && isOpen) {
-      setFormData({ ...property });
+      setFormData({
+        ...property,
+        features: property.features || [],
+        images: property.images || [],
+        taluka: property.taluka || "",
+        district: property.district || "",
+        nearest_town: property.nearest_town || "",
+        nearest_road: property.nearest_road || "",
+        distance_to_nearest_road: property.distance_to_nearest_road || undefined,
+        nearest_school_colleges: property.nearest_school_colleges || "",
+        zoning_status: property.zoning_status || "",
+        na_permit: property.na_permit || false,
+        upcoming_infra: property.upcoming_infra || "",
+        ownership_type: property.ownership_type || "",
+        rera_restration: property.rera_restration || "",
+        town_planning_permit: property.town_planning_permit || "",
+        jantri_rate: property.jantri_rate || undefined,
+      });
       setDisplayPrice(formatPrice(property.price || 0));
       setFeaturesInput((property.features || []).join(", "));
       setExistingImages(property.images || []);
       setDeletedImages([]);
       setNewImages([]);
       setError("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } else if (!isOpen) {
       resetForm();
     }
@@ -150,7 +194,6 @@ export default function EditPropertyModal({
 
   const resetForm = () => {
     setFormData({
-      id: "",
       title: "",
       price: 0,
       type: "Agricultural",
@@ -161,7 +204,8 @@ export default function EditPropertyModal({
       longitude: 0,
       description: "",
       private: false,
-      investment_gain: 0,
+      investment_gain: undefined,
+      return_of_investment: undefined,
       water_connectivity: false,
       electricity_connectivity: false,
       gas_connectivity: false,
@@ -170,11 +214,22 @@ export default function EditPropertyModal({
       financial_risk: false,
       liquidity_risk: false,
       physical_risk: false,
+      risk_percentage: undefined,
       features: [],
       images: [],
-      views: null,
-      createdAt: "",
-      updatedAt: "",
+      taluka: "",
+      district: "",
+      nearest_town: "",
+      nearest_road: "",
+      distance_to_nearest_road: undefined,
+      nearest_school_colleges: "",
+      zoning_status: "",
+      na_permit: false,
+      upcoming_infra: "",
+      ownership_type: "",
+      rera_restration: "",
+      town_planning_permit: "",
+      jantri_rate: undefined,
     });
     setDisplayPrice("");
     setFeaturesInput("");
@@ -198,19 +253,17 @@ export default function EditPropertyModal({
       toast.error(
         `You can only add ${allowed} more image(s). Max ${MAX_IMAGES} allowed.`
       );
-      // Keep input as-is (user sees the files they tried to add)
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     setNewImages((prev) => [...prev, ...newFiles]);
     toast.success(`${newFiles.length} image(s) added. Total: ${totalAfter}`);
-    // Do NOT clear input — we want file names to stay visible
   };
 
   const removeExistingImage = (img: string) => {
     setExistingImages((prev) => prev.filter((i) => i !== img));
     setDeletedImages((prev) => [...prev, img]);
-    // Optional: clear input if no new images left
     if (newImages.length === 0 && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -220,7 +273,6 @@ export default function EditPropertyModal({
     const removedFile = newImages[idx];
     setNewImages((prev) => prev.filter((_, i) => i !== idx));
 
-    // Rebuild FileList without the removed file
     const dt = new DataTransfer();
     newImages
       .filter((_, i) => i !== idx)
@@ -229,7 +281,6 @@ export default function EditPropertyModal({
       fileInputRef.current.files = dt.files;
     }
 
-    // If no new images left, clear input
     if (dt.files.length === 0 && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -262,7 +313,7 @@ export default function EditPropertyModal({
         ...formData,
         price: parsePrice(displayPrice || "0"),
         features: featuresArray,
-        images: newImages,
+        images: newImages.length > 0 ? newImages : existingImages,
         existingImages: existingImages.length ? existingImages : null,
         deletedImages: deletedImages.length ? deletedImages : null,
       });
@@ -321,7 +372,7 @@ export default function EditPropertyModal({
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Property Title</Label>
+                  <Label htmlFor="title">Property Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -333,7 +384,7 @@ export default function EditPropertyModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="price">Price (₹)</Label>
+                  <Label htmlFor="price">Price (₹) *</Label>
                   <Input
                     id="price"
                     type="text"
@@ -354,7 +405,7 @@ export default function EditPropertyModal({
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="type">Property Type</Label>
+                  <Label htmlFor="type">Property Type *</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(v) =>
@@ -366,17 +417,15 @@ export default function EditPropertyModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Agricultural">Agricultural</SelectItem>
-                      <SelectItem value="Non-Agricultural">
-                        Non-Agricultural
-                      </SelectItem>
+                      <SelectItem value="Residential">Residential</SelectItem>
+                      <SelectItem value="Commercial">Commercial</SelectItem>
                       <SelectItem value="Farmhouse">Farmhouse</SelectItem>
                       <SelectItem value="Industrial">Industrial</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="size">Size</Label>
+                  <Label htmlFor="size">Size *</Label>
                   <Input
                     id="size"
                     value={formData.size}
@@ -388,7 +437,7 @@ export default function EditPropertyModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="primary_purpose">Primary Purpose</Label>
+                  <Label htmlFor="primary_purpose">Primary Purpose *</Label>
                   <Select
                     value={formData.primary_purpose}
                     onValueChange={(v) =>
@@ -404,8 +453,8 @@ export default function EditPropertyModal({
                     <SelectContent>
                       <SelectItem value="Personal Use">Personal Use</SelectItem>
                       <SelectItem value="Investment">Investment</SelectItem>
-                      <SelectItem value="Commercial Use">
-                        Commercial Use
+                      <SelectItem value="Commercial Development">
+                        Commercial Development
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -414,7 +463,7 @@ export default function EditPropertyModal({
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">Location *</Label>
                   <Input
                     id="location"
                     value={formData.location}
@@ -429,7 +478,7 @@ export default function EditPropertyModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="latitude">Latitude</Label>
+                  <Label htmlFor="latitude">Latitude *</Label>
                   <Input
                     id="latitude"
                     type="number"
@@ -441,12 +490,12 @@ export default function EditPropertyModal({
                         latitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="e.g. 28.6139"
+                    placeholder="e.g. 26.9124"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="longitude">Longitude</Label>
+                  <Label htmlFor="longitude">Longitude *</Label>
                   <Input
                     id="longitude"
                     type="number"
@@ -458,7 +507,7 @@ export default function EditPropertyModal({
                         longitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="e.g. 77.2090"
+                    placeholder="e.g. 75.7873"
                     required
                   />
                 </div>
@@ -492,19 +541,249 @@ export default function EditPropertyModal({
               </div>
 
               <div>
-                <Label htmlFor="investment_gain">Investment Gain (%)</Label>
+                <Label htmlFor="investment_gain">Investment Gain (₹)</Label>
                 <Input
                   id="investment_gain"
                   type="text"
-                  value={formData.investment_gain || ""}
+                  value={
+                    formData.investment_gain
+                      ? formatPrice(formData.investment_gain)
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9]/g, "");
+                    setFormData((p) => ({
+                      ...p,
+                      investment_gain: v ? Number(v) : undefined,
+                    }));
+                  }}
+                  placeholder="e.g. 15000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="return_of_investment">Return on Investment (%)</Label>
+                <Input
+                  id="return_of_investment"
+                  type="number"
+                  value={formData.return_of_investment || ""}
                   onChange={(e) =>
                     setFormData((p) => ({
                       ...p,
-                      investment_gain: Number(e.target.value),
+                      return_of_investment: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
                     }))
                   }
-                  placeholder="e.g. 12.5"
+                  placeholder="e.g. 15"
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* LOCATION DETAILS */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Location Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="taluka">Taluka</Label>
+                  <Input
+                    id="taluka"
+                    value={formData.taluka}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, taluka: e.target.value }))
+                    }
+                    placeholder="e.g. Phagi"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Input
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, district: e.target.value }))
+                    }
+                    placeholder="e.g. Jaipur"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nearest_town">Nearest Town</Label>
+                  <Input
+                    id="nearest_town"
+                    value={formData.nearest_town}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, nearest_town: e.target.value }))
+                    }
+                    placeholder="e.g. Dudu"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nearest_road">Nearest Road</Label>
+                  <Input
+                    id="nearest_road"
+                    value={formData.nearest_road}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, nearest_road: e.target.value }))
+                    }
+                    placeholder="e.g. NH-48"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="distance_to_nearest_road">
+                    Distance to Nearest Road (km)
+                  </Label>
+                  <Input
+                    id="distance_to_nearest_road"
+                    type="number"
+                    value={formData.distance_to_nearest_road || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        distance_to_nearest_road: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 2.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nearest_school_colleges">
+                    Nearest Schools/Colleges (comma-separated)
+                  </Label>
+                  <Input
+                    id="nearest_school_colleges"
+                    value={formData.nearest_school_colleges}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        nearest_school_colleges: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. St. Xavier School, Govt. Arts College"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* PROPERTY DETAILS */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="zoning_status">Zoning Status</Label>
+                  <Input
+                    id="zoning_status"
+                    value={formData.zoning_status}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, zoning_status: e.target.value }))
+                    }
+                    placeholder="e.g. Agricultural Zone"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ownership_type">Ownership Type</Label>
+                  <Input
+                    id="ownership_type"
+                    value={formData.ownership_type}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        ownership_type: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Freehold"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rera_restration">RERA Registration</Label>
+                  <Input
+                    id="rera_restration"
+                    value={formData.rera_restration}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        rera_restration: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. RAJ-2025-12345"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="town_planning_permit">
+                    Town Planning Permit
+                  </Label>
+                  <Input
+                    id="town_planning_permit"
+                    value={formData.town_planning_permit}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        town_planning_permit: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Approved"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="upcoming_infra">
+                    Upcoming Infrastructure (comma-separated)
+                  </Label>
+                  <Input
+                    id="upcoming_infra"
+                    value={formData.upcoming_infra}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        upcoming_infra: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Ring Road Extension, New Industrial Hub"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="jantri_rate">Jantri Rate</Label>
+                  <Input
+                    id="jantri_rate"
+                    type="number"
+                    value={formData.jantri_rate || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        jantri_rate: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 550"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="na_permit"
+                  checked={formData.na_permit}
+                  onCheckedChange={(c) =>
+                    setFormData((p) => ({ ...p, na_permit: c }))
+                  }
+                />
+                <Label htmlFor="na_permit">NA Permit</Label>
               </div>
             </CardContent>
           </Card>
@@ -610,6 +889,24 @@ export default function EditPropertyModal({
                   </div>
                 ))}
               </div>
+
+              <div>
+                <Label htmlFor="risk_percentage">Risk Percentage (%)</Label>
+                <Input
+                  id="risk_percentage"
+                  type="number"
+                  value={formData.risk_percentage || ""}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      risk_percentage: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
+                    }))
+                  }
+                  placeholder="e.g. 50"
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -648,7 +945,6 @@ export default function EditPropertyModal({
               )}
 
               <div className="grid md:grid-cols-3 gap-4">
-                {/* Existing Images */}
                 {existingImages.map((img, i) => (
                   <div
                     key={`exist-${i}`}
@@ -674,7 +970,6 @@ export default function EditPropertyModal({
                   </div>
                 ))}
 
-                {/* New Images */}
                 {newImages.map((file, i) => (
                   <div
                     key={`new-${i}`}
@@ -716,7 +1011,7 @@ export default function EditPropertyModal({
                     .filter((f) => f);
                   setFormData((p) => ({ ...p, features: arr }));
                 }}
-                placeholder="e.g. Water Supply, Fenced, Road Access"
+                placeholder="e.g. Well, Canal, Fenced"
               />
               <div className="flex flex-wrap gap-2">
                 {formData.features?.map((f, i) => (
