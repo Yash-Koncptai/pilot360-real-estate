@@ -12,24 +12,16 @@ const LayoutAdmin = ({ children }: { children: ReactNode }) => {
       <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/admin" className="flex items-center gap-2 font-semibold">
-            <span className="text-lg">EstateHub</span>
+            <span className="text-lg">Chokhizameen</span>
           </Link>
           <nav
             className="hidden md:flex items-center gap-1"
             aria-label="Main navigation"
           >
-            {/* <NavLink to="/admin" className={navLinkClass} end>
-              Dashboard
-            </NavLink>
-            <NavLink to="/admin/listings" className={navLinkClass}>
-              Listings
-            </NavLink>
-            <NavLink to="/admin/users" className={navLinkClass}>
-              Users
-            </NavLink> */}
+            
           </nav>
           <div className="flex items-center gap-2">
-            {/* Removed Sign In, Sign Out, and List your property buttons */}
+            
           </div>
         </div>
       </header>

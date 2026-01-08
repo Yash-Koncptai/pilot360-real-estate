@@ -1,4 +1,3 @@
-
 import Seo from "@/components/Seo";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -24,9 +23,6 @@ export default function MapPage() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [viewMode, setViewMode] = useState<"properties" | "landmarks">(
-    "properties"
-  );
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<FiltersType>({
     purpose: "buy",
@@ -179,9 +175,72 @@ export default function MapPage() {
 
     const bounds = new mapboxgl.LngLatBounds();
 
-    if (viewMode === "properties") {
-      // Add property markers
-      filteredProperties.forEach((property: any) => {
+    // Add property markers as circles
+    map.on("load", () => {
+      // Create a GeoJSON source for properties
+      const geojson: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: filteredProperties.map((property: any) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [property.longitude, property.latitude],
+          },
+          properties: {
+            id: property.id,
+            title: property.title,
+            price: property.price,
+            location: property.location,
+            type: property.type,
+            size: property.size,
+            aiMatchScore: property.aiMatchScore,
+            growthPotential: property.aiInsights?.growthPotential || "Medium",
+            expectedROI: property.aiInsights?.expectedROI || "",
+            riskLevel: property.aiInsights?.riskLevel || "",
+            viewsThisWeek:
+              property.aiInsights?.demandIndicators.viewsThisWeek || 0,
+          },
+        })),
+      };
+
+      // Add source
+      map.addSource("properties", {
+        type: "geojson",
+        data: geojson,
+      });
+
+      // Add circle layer
+      map.addLayer({
+        id: "property-circles",
+        type: "circle",
+        source: "properties",
+        paint: {
+          "circle-radius": 10,
+          "circle-color": [
+            "match",
+            ["get", "growthPotential"],
+            "High",
+            "#10B981", // Green
+            "Medium",
+            "#F59E0B", // Yellow
+            "Low",
+            "#EF4444", // Red
+            "#3B82F6", // Default blue
+          ],
+          "circle-opacity": 0.8,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+        },
+      });
+
+      // Popup on click
+      map.on("click", "property-circles", (e) => {
+        const features = e.features;
+        if (!features || !features[0]) return;
+
+        const properties = features[0].properties;
+        const coordinates = (features[0].geometry as GeoJSON.Point).coordinates.slice();
+
         const formatPrice = (value: number) => {
           if (value >= 10000000) {
             return `₹${(value / 10000000).toFixed(1)}Cr`;
@@ -192,169 +251,101 @@ export default function MapPage() {
         const popupHtml = `
           <div style="max-width:320px;" class="p-3">
             <div class="flex items-start justify-between mb-2">
-              <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${
-                property.title
-              }</h3>
-              <div style="display:flex;gap:4px;flex-direction:column;align-items:end;">
+              <h3 style="font-weight:700;color:hsl(var(--foreground));margin:0;">${properties.title}</h3>
+              <div style="display:flex;gap:4px;flex-direction:column;align-items-end;">
                 ${
-                  property.aiInsights?.growthPotential === "High"
+                  properties.growthPotential === "High"
                     ? '<span style="background:linear-gradient(45deg, #fbbf24, #f97316);color:white;font-size:10px;padding:2px 6px;border-radius:8px;">⭐ High Growth</span>'
                     : ""
                 }
-                <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${
-                  property.aiMatchScore
-                }% Match</span>
+                <span style="background:hsl(var(--primary));color:white;font-size:10px;padding:2px 6px;border-radius:8px;">${properties.aiMatchScore}% Match</span>
               </div>
             </div>
-            <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(
-              property.price
-            )}</div>
-            <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${
-              property.location
-            }</div>
+            <div style="color:hsl(var(--primary));font-weight:600;font-size:16px;margin-bottom:8px;">${formatPrice(properties.price)}</div>
+            <div style="color:hsl(var(--muted-foreground));font-size:14px;margin-bottom:8px;">${properties.location}</div>
             <div style="display:flex;gap:6px;margin-bottom:12px;">
-              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${
-                property.type
-              }</span>
-              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${
-                property.size
-              }</span>
+              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${properties.type}</span>
+              <span style="background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;padding:2px 8px;border-radius:12px;">${properties.size}</span>
             </div>
-            ${
-              property.aiInsights
-                ? `
-              <div style="border-top:1px solid hsl(var(--border));padding-top:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <span style="font-size:12px;color:hsl(var(--muted-foreground));">Expected ROI</span>
-                  <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.expectedROI}</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <span style="font-size:12px;color:hsl(var(--muted-foreground));">Growth Potential</span>
-                  <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${property.aiInsights.growthPotential}</span>
-                </div>
-                <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
-                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">👁️ ${property.aiInsights.demandIndicators.viewsThisWeek} views</span>
-                  <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${property.aiInsights.riskLevel} Risk</span>
-                </div>
+            <div style="border-top:1px solid hsl(var(--border));padding-top:8px;">
+              <div style="display:flex;justify-content:space-between;align-items-center;margin-bottom:4px;">
+                <span style="font-size:12px;color:hsl(var(--muted-foreground));">Expected ROI</span>
+                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${properties.expectedROI}</span>
               </div>
-            `
-                : ""
-            }
-            <button onclick="window.location.href='/property/${
-              property.id
-            }'" style="width:100%;margin-top:12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">View Details</button>
+              <div style="display:flex;justify-content:space-between;align-items-center;margin-bottom:4px;">
+                <span style="font-size:12px;color:hsl(var(--muted-foreground));">Growth Potential</span>
+                <span style="font-size:12px;color:hsl(var(--foreground));font-weight:600;">${properties.growthPotential}</span>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">👁️ ${properties.viewsThisWeek} views</span>
+                <span style="font-size:10px;background:hsl(var(--secondary));color:hsl(var(--foreground));padding:1px 4px;border-radius:4px;">🛡️ ${properties.riskLevel} Risk</span>
+              </div>
+            </div>
+            <button onclick="window.location.href='/property/${properties.id}'" style="width:100%;margin-top:12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">View Details</button>
           </div>
         `;
 
-        const popup = new mapboxgl.Popup({
-          offset: 15,
-          maxWidth: "320px",
-        }).setHTML(popupHtml);
-
-        // Custom marker color based on property type and AI insights
-        let markerColor = "#3B82F6"; // Default blue
-        if (property.aiInsights?.growthPotential === "High")
-          markerColor = "#F59E0B"; // Gold for high growth
-        else if (property.type === "Agricultural")
-          markerColor = "#10B981"; // Green for agricultural
-        else if (property.type === "Industrial") markerColor = "#8B5CF6"; // Purple for industrial
-
-        new mapboxgl.Marker({ color: markerColor })
-          .setLngLat([property.longitude, property.latitude])
-          .setPopup(popup)
+        new mapboxgl.Popup()
+          .setLngLat(coordinates as [number, number])
+          .setHTML(popupHtml)
           .addTo(map);
-
-        bounds.extend([property.longitude, property.latitude]);
       });
 
-      // Add heatmap if enabled
-      if (showHeatmap) {
-        map.on("load", () => {
-          landHeatmapData.forEach((zone, index) => {
-            map.addSource(`heatmap-${index}`, {
-              type: "geojson",
-              data: {
-                type: "Feature",
-                geometry: {
-                  type: "Point",
-                  coordinates: [zone.zone[1], zone.zone[0]],
-                },
-                properties: {
-                  avgPricePerSqFt: zone.avgPricePerSqFt,
-                },
-              },
-            });
+      // Change cursor to pointer on hover
+      map.on("mouseenter", "property-circles", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "property-circles", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    });
 
-            map.addLayer({
-              id: `heatmap-${index}`,
-              type: "circle",
-              source: `heatmap-${index}`,
-              paint: {
-                "circle-radius": zone.radius / 50,
-                "circle-color":
-                  zone.avgPricePerSqFt > 5500
-                    ? "#EF4444"
-                    : zone.avgPricePerSqFt > 4000
-                    ? "#F59E0B"
-                    : "#10B981",
-                "circle-opacity": 0.3,
-                "circle-stroke-color":
-                  zone.avgPricePerSqFt > 5500
-                    ? "#DC2626"
-                    : zone.avgPricePerSqFt > 4000
-                    ? "#D97706"
-                    : "#059669",
-                "circle-stroke-width": 2,
+    // Extend bounds for all properties
+    filteredProperties.forEach((property: any) => {
+      bounds.extend([property.longitude, property.latitude]);
+    });
+
+    // Add heatmap if enabled
+    if (showHeatmap) {
+      map.on("load", () => {
+        landHeatmapData.forEach((zone, index) => {
+          map.addSource(`heatmap-${index}`, {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [zone.zone[1], zone.zone[0]],
               },
-            });
+              properties: {
+                avgPricePerSqFt: zone.avgPricePerSqFt,
+              },
+            },
+          });
+
+          map.addLayer({
+            id: `heatmap-${index}`,
+            type: "circle",
+            source: `heatmap-${index}`,
+            paint: {
+              "circle-radius": zone.radius / 50,
+              "circle-color":
+                zone.avgPricePerSqFt > 5500
+                  ? "#EF4444"
+                  : zone.avgPricePerSqFt > 4000
+                  ? "#F59E0B"
+                  : "#10B981",
+              "circle-opacity": 0.3,
+              "circle-stroke-color":
+                zone.avgPricePerSqFt > 5500
+                  ? "#DC2626"
+                  : zone.avgPricePerSqFt > 4000
+                  ? "#D97706"
+                  : "#059669",
+              "circle-stroke-width": 2,
+            },
           });
         });
-      }
-    } else {
-      // Ahmedabad famous places (landmarks)
-      const places = [
-        {
-          name: "Sabarmati Ashram",
-          desc: "Historic residence of Mahatma Gandhi and a major site of India's independence movement.",
-          coords: [72.5802, 23.0608] as [number, number],
-        },
-        {
-          name: "Kankaria Lake",
-          desc: "A large, scenic lake with gardens, a zoo, toy train, and entertainment for families.",
-          coords: [72.602, 23.0063] as [number, number],
-        },
-        {
-          name: "Sidi Saiyyed Mosque",
-          desc: "Famous for its intricate stone lattice work, especially the 'Tree of Life' window.",
-          coords: [72.5714, 23.0307] as [number, number],
-        },
-        {
-          name: "Law Garden",
-          desc: "A lively night market for handicrafts and street food, surrounded by greenery.",
-          coords: [72.571, 23.022] as [number, number],
-        },
-        {
-          name: "Science City",
-          desc: "An interactive science park with exhibits, an IMAX theatre, and a planetarium.",
-          coords: [72.4935, 23.0796] as [number, number],
-        },
-      ];
-
-      places.forEach((place) => {
-        const popupHtml = `
-          <div style="max-width:260px;">
-            <div style="font-weight:700;margin-bottom:6px;color:hsl(var(--foreground));">${place.name}</div>
-            <div style="font-size:14px;line-height:1.5;color:hsl(var(--muted-foreground));">${place.desc}</div>
-          </div>
-        `;
-
-        const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(popupHtml);
-        new mapboxgl.Marker({ color: "#1E90FF" })
-          .setLngLat(place.coords)
-          .setPopup(popup)
-          .addTo(map);
-
-        bounds.extend(place.coords);
       });
     }
 
@@ -370,7 +361,7 @@ export default function MapPage() {
       map.remove();
       mapRef.current = null;
     };
-  }, [viewMode, showHeatmap, filteredProperties, loading, error]);
+  }, [showHeatmap, filteredProperties, loading, error]);
 
   const handleFiltersChange = (newFilters: FiltersType) => {
     setFilters(newFilters);
@@ -381,12 +372,12 @@ export default function MapPage() {
       purpose: "buy",
       propertyTypes: [],
       budgetRange: [0, 50000000],
-      location: '',
-      size: 'any',
+      location: "",
+      size: "any",
       sqftRange: [0, 5000],
-      commute: '',
+      commute: "",
       amenities: [],
-      aiSearch: ''
+      aiSearch: "",
     });
   };
 
@@ -403,7 +394,7 @@ export default function MapPage() {
 
       <div className="flex h-screen bg-background">
         {/* Sidebar Filters */}
-        {viewMode === "properties" && showFilters && (
+        {showFilters && (
           <div className="w-80 flex-shrink-0">
             <PropertyFilters
               onFiltersChange={handleFiltersChange}
@@ -422,97 +413,52 @@ export default function MapPage() {
                 AI-Powered Land Investment Map
               </h1>
               <div className="flex gap-2">
-                {viewMode === "properties" && (
-                  <Button
-                    variant={showFilters ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filters
-                  </Button>
-                )}
                 <Button
-                  variant={viewMode === "properties" ? "default" : "outline"}
+                  variant={showFilters ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setViewMode("properties")}
+                  onClick={() => setShowFilters(!showFilters)}
                 >
-                  Properties
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filters
                 </Button>
                 <Button
-                  variant={viewMode === "landmarks" ? "default" : "outline"}
+                  variant={showHeatmap ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setViewMode("landmarks")}
+                  onClick={() => setShowHeatmap(!showHeatmap)}
                 >
-                  Landmarks
+                  Price Heatmap
                 </Button>
-                {viewMode === "properties" && (
-                  <Button
-                    variant={showHeatmap ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowHeatmap(!showHeatmap)}
-                  >
-                    Price Heatmap
-                  </Button>
-                )}
               </div>
             </div>
 
             {/* Results Summary */}
-            {viewMode === "properties" && (
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>
-                  {filteredProperties.length} land opportunities found
-                </span>
-                {filters.aiSearch && (
-                  <Badge variant="secondary" className="text-xs">
-                    AI Search: "{filters.aiSearch}"
-                  </Badge>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>
+                {filteredProperties.length} land opportunities found
+              </span>
+              {filters.aiSearch && (
+                <Badge variant="secondary" className="text-xs">
+                  AI Search: "{filters.aiSearch}"
+                </Badge>
+              )}
+            </div>
           </div>
 
           {/* Map Controls Info */}
           <div className="p-4 border-b border-border">
             <div className="flex flex-wrap gap-2 text-sm">
-              {viewMode === "properties" ? (
-                <>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    AI Best Match
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    For Rent
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    For Sale
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    Premium Villa
-                  </Badge>
-                </>
-              ) : (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  Famous Landmarks
-                </Badge>
-              )}
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                High Potential
+              </Badge>
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                Medium Potential
+              </Badge>
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                Low Potential
+              </Badge>
             </div>
           </div>
 

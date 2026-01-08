@@ -1,5 +1,4 @@
-
-// import { Property } from "@/data/properties";
+// import { LandProperty } from "@/data/landProperties";
 // import {
 //   Card,
 //   CardContent,
@@ -10,20 +9,12 @@
 // import { Button } from "@/components/ui/button";
 // import { Badge } from "@/components/ui/badge";
 // import { useNavigate } from "react-router-dom";
-// import {
-//   Star,
-//   MapPin,
-//   Clock,
-//   Heart,
-//   Droplet,
-//   Zap,
-//   Flame,
-//   AlertTriangle,
-// } from "lucide-react";
-// import { toast } from "sonner";
+// import { MapPin, Droplet, Zap, Flame, AlertTriangle, Heart } from "lucide-react";
+// import { useToast } from "@/hooks/use-toast";
+// import api from "@/utils/api";
 
 // interface PropertyCardProps {
-//   property: Property;
+//   property: LandProperty;
 //   setAuthModalOpen: (open: boolean) => void;
 //   setTargetPropertyId: (id: string) => void;
 // }
@@ -41,6 +32,7 @@
 //   setAuthModalOpen,
 //   setTargetPropertyId,
 // }: PropertyCardProps) {
+//   const { toast } = useToast();
 //   const navigate = useNavigate();
 
 //   const handleViewDetails = () => {
@@ -48,13 +40,23 @@
 //     if (isSignedIn) {
 //       navigate(`/property/${property.id}`);
 //     } else {
-//       setTargetPropertyId(property.id);
+//       setTargetPropertyId(property.id.toString());
 //       setAuthModalOpen(true);
-//       toast.error("You are signed out. Please sign in.", {
-//         action: {
-//           label: "Sign In",
-//           onClick: () => setAuthModalOpen(true),
-//         },
+//       toast({
+//         title: "Authentication Required",
+//         description: (
+//           <div>
+//             You are signed out.{" "}
+//             <button
+//               onClick={() => setAuthModalOpen(true)}
+//               className="underline text-primary font-medium"
+//             >
+//               Sign in first
+//             </button>
+//             .
+//           </div>
+//         ),
+//         variant: "destructive",
 //       });
 //     }
 //   };
@@ -72,9 +74,11 @@
 //       )}
 
 //       <img
-//         src={`https://staging.chokhizameen.com/${
-//           property.images?.[0] || "/placeholder.svg"
-//         }`}
+//         src={
+//           property.images[0]?.startsWith("http")
+//             ? property.images[0]
+//             : `${api.defaults.baseURL}/${property.images[0] || "/placeholder.svg"}`
+//         }
 //         alt={`${property.title} - ${property.location}`}
 //         loading="lazy"
 //         className="h-48 w-full object-cover"
@@ -98,18 +102,12 @@
 //       <CardContent className="space-y-4">
 //         <div className="flex items-center justify-between">
 //           <div className="flex items-center gap-3">
-//             <div className="flex items-center gap-1 text-sm">
-//               <span className="font-medium">{property.bedrooms}</span>
-//               <span className="text-muted-foreground">bed</span>
-//             </div>
-//             <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-//             <div className="flex items-center gap-1 text-sm">
-//               <span className="font-medium">{property.bathrooms}</span>
-//               <span className="text-muted-foreground">bath</span>
-//             </div>
-//             <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
 //             <span className="text-sm text-muted-foreground">
 //               {property.type}
+//             </span>
+//             <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+//             <span className="text-sm text-muted-foreground">
+//               {property.size}
 //             </span>
 //           </div>
 //         </div>
@@ -121,31 +119,11 @@
 //         </div>
 
 //         <div className="space-y-2 p-3 bg-primary/5 rounded-lg">
-//           <div className="flex items-center justify-between text-xs">
-//             <span className="text-muted-foreground">Investment Rating:</span>
-//             <div className="flex items-center gap-1">
-//               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-//               <span className="font-medium">
-//                 {property.aiInsights?.investmentRating}/5
-//               </span>
-//             </div>
-//           </div>
-//           {property.aiInsights?.neighborhood.commuteTime && (
-//             <div className="flex items-center justify-between text-xs">
-//               <span className="text-muted-foreground">Commute:</span>
-//               <div className="flex items-center gap-1">
-//                 <Clock className="w-3 h-3" />
-//                 <span className="font-medium">
-//                   {property.aiInsights.neighborhood.commuteTime}
-//                 </span>
-//               </div>
-//             </div>
-//           )}
 //           {property.return_of_investment && (
 //             <div className="flex items-center justify-between text-xs">
 //               <span className="text-muted-foreground">ROI:</span>
 //               <span className="font-medium">
-//                 {property.return_of_investment}%
+//                 {property.return_of_investment}% per annum
 //               </span>
 //             </div>
 //           )}
@@ -173,6 +151,101 @@
 //             </div>
 //           )}
 //         </div>
+
+//         {/* Collapsible Property Details Section */}
+//         <details className="space-y-2 p-3 bg-secondary/10 rounded-lg">
+//           <summary className="text-sm font-semibold cursor-pointer">
+//             Property Details
+//           </summary>
+//           <div className="space-y-2 pt-2">
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Taluka:</span>
+//               <span className="font-medium">
+//                 {property.taluka || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">District:</span>
+//               <span className="font-medium">
+//                 {property.district || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Nearest Town:</span>
+//               <span className="font-medium">
+//                 {property.nearest_town || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Nearest Road:</span>
+//               <span className="font-medium">
+//                 {property.nearest_road || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Distance to Road:</span>
+//               <span className="font-medium">
+//                 {property.distance_to_nearest_road != null
+//                   ? `${property.distance_to_nearest_road} km`
+//                   : "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Nearest Schools/Colleges:</span>
+//               <span className="font-medium">
+//                 {property.nearest_school_colleges?.length
+//                   ? property.nearest_school_colleges.join(", ")
+//                   : "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Zoning Status:</span>
+//               <span className="font-medium">
+//                 {property.zoning_status || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">NA Permit:</span>
+//               <span className="font-medium">
+//                 {property.na_permit ? "Yes" : "No"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Upcoming Infra:</span>
+//               <span className="font-medium">
+//                 {property.upcoming_infra?.length
+//                   ? property.upcoming_infra.join(", ")
+//                   : "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Ownership Type:</span>
+//               <span className="font-medium">
+//                 {property.ownership_type || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">RERA Registration:</span>
+//               <span className="font-medium">
+//                 {property.rera_registration || "Not registered"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Town Planning Permit:</span>
+//               <span className="font-medium">
+//                 {property.town_planning_permit || "Not specified"}
+//               </span>
+//             </div>
+//             <div className="flex items-center justify-between text-xs">
+//               <span className="text-muted-foreground">Jantri Rate:</span>
+//               <span className="font-medium">
+//                 {property.jantri_rate != null
+//                   ? formatPrice(property.jantri_rate) + " per sq ft"
+//                   : "Not specified"}
+//               </span>
+//             </div>
+//           </div>
+//         </details>
 //       </CardContent>
 //       <CardFooter>
 //         <Button
@@ -185,6 +258,7 @@
 //     </Card>
 //   );
 // }
+
 import { LandProperty } from "@/data/landProperties";
 import {
   Card,
@@ -204,6 +278,7 @@ interface PropertyCardProps {
   property: LandProperty;
   setAuthModalOpen: (open: boolean) => void;
   setTargetPropertyId: (id: string) => void;
+  isAuthenticated: boolean; // ← NEW PROP
 }
 
 const formatPrice = (value: number) => {
@@ -218,25 +293,32 @@ export default function PropertyCard({
   property,
   setAuthModalOpen,
   setTargetPropertyId,
+  isAuthenticated,
 }: PropertyCardProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-    const isSignedIn = !!localStorage.getItem("userToken");
-    if (isSignedIn) {
+    if (isAuthenticated) {
       navigate(`/property/${property.id}`);
     } else {
       setTargetPropertyId(property.id.toString());
       setAuthModalOpen(true);
       toast({
         title: "Authentication Required",
-        description: "Please sign in to view property details.",
+        description: (
+          <div>
+            You are signed out.{" "}
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="underline text-primary font-medium"
+            >
+              Sign in first
+            </button>
+            .
+          </div>
+        ),
         variant: "destructive",
-        action: {
-          label: "Sign In",
-          onClick: () => setAuthModalOpen(true),
-        },
       });
     }
   };
@@ -263,13 +345,13 @@ export default function PropertyCard({
         loading="lazy"
         className="h-48 w-full object-cover"
         onError={(e) => {
+
+
           const target = e.target as HTMLImageElement;
           target.src = "/placeholder.svg";
-          console.error(
-            `Failed to load image for ${property.title}: ${target.src}`
-          );
         }}
       />
+
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold leading-tight mb-2">
           {property.title}
@@ -279,6 +361,7 @@ export default function PropertyCard({
           <p>{property.location}</p>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -292,10 +375,22 @@ export default function PropertyCard({
           </div>
         </div>
 
+        {/* BLURRED PRICE FOR GUESTS */}
         <div className="text-right">
-          <div className="font-bold text-xl text-primary">
-            {formatPrice(property.price)}
-          </div>
+          {isAuthenticated ? (
+            <div className="font-bold text-xl text-primary">
+              {formatPrice(property.price)}
+            </div>
+          ) : (
+            <div className="relative inline-block">
+              <div className="font-bold text-xl blur-sm select-none text-gray-400">
+                ₹XX,XX,XXX
+              </div>
+              <span className="absolute inset-0 flex items-center justify-end text-xs text-muted-foreground italic pointer-events-none">
+                Sign in to view price
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 p-3 bg-primary/5 rounded-lg">
@@ -331,7 +426,103 @@ export default function PropertyCard({
             </div>
           )}
         </div>
+
+        {/* Property Details (unchanged) */}
+        <details className="space-y-2 p-3 bg-secondary/10 rounded-lg">
+          <summary className="text-sm font-semibold cursor-pointer">
+            Property Details
+          </summary>
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Taluka:</span>
+              <span className="font-medium">
+                {property.taluka || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">District:</span>
+              <span className="font-medium">
+                {property.district || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Town:</span>
+              <span className="font-medium">
+                {property.nearest_town || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Road:</span>
+              <span className="font-medium">
+                {property.nearest_road || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Distance to Road:</span>
+              <span className="font-medium">
+                {property.distance_to_nearest_road != null
+                  ? `${property.distance_to_nearest_road} km`
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Nearest Schools/Colleges:</span>
+              <span className="font-medium">
+                {property.nearest_school_colleges?.length
+                  ? property.nearest_school_colleges.join(", ")
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Zoning Status:</span>
+              <span className="font-medium">
+                {property.zoning_status || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">NA Permit:</span>
+              <span className="font-medium">
+                {property.na_permit ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Upcoming Infra:</span>
+              <span className="font-medium">
+                {property.upcoming_infra?.length
+                  ? property.upcoming_infra.join(", ")
+                  : "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Ownership Type:</span>
+              <span className="font-medium">
+                {property.ownership_type || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">RERA Registration:</span>
+              <span className="font-medium">
+                {property.rera_registration || "Not registered"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Town Planning Permit:</span>
+              <span className="font-medium">
+                {property.town_planning_permit || "Not specified"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Jantri Rate:</span>
+              <span className="font-medium">
+                {property.jantri_rate != null
+                  ? formatPrice(property.jantri_rate) + " per sq ft"
+                  : "Not specified"}
+              </span>
+            </div>
+          </div>
+        </details>
       </CardContent>
+
       <CardFooter>
         <Button
           className="w-full bg-primary hover:bg-primary/90 text-white font-medium"

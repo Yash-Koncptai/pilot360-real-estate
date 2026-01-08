@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
+// CONFIG
+const BASE_IMAGE_URL = "https://staging.chokhizameen.com";
+const MAX_IMAGES = 20;
+
 interface Property {
   id?: string;
   title: string;
@@ -36,6 +40,7 @@ interface Property {
   description: string;
   private: boolean;
   investment_gain?: number;
+  return_of_investment?: number;
   water_connectivity?: boolean;
   electricity_connectivity?: boolean;
   gas_connectivity?: boolean;
@@ -44,11 +49,24 @@ interface Property {
   financial_risk?: boolean;
   liquidity_risk?: boolean;
   physical_risk?: boolean;
+  risk_percentage?: number;
   features: string[] | null;
   images: string[] | null;
-  views: number | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  taluka?: string;
+  district?: string;
+  nearest_town?: string;
+  nearest_road?: string;
+  distance_to_nearest_road?: number;
+  nearest_school_colleges?: string;
+  zoning_status?: string;
+  na_permit?: boolean;
+  upcoming_infra?: string;
+  ownership_type?: string;
+  rera_restration?: string;
+  town_planning_permit?: string;
+  jantri_rate?: number;
 }
 
 interface EditPropertyModalProps {
@@ -70,8 +88,8 @@ export default function EditPropertyModal({
   onClose,
   onSave,
 }: EditPropertyModalProps) {
+  // STATE
   const [formData, setFormData] = useState<Property>({
-    id: "",
     title: "",
     price: 0,
     type: "Agricultural",
@@ -82,7 +100,8 @@ export default function EditPropertyModal({
     longitude: 0,
     description: "",
     private: false,
-    investment_gain: 0,
+    investment_gain: undefined,
+    return_of_investment: undefined,
     water_connectivity: false,
     electricity_connectivity: false,
     gas_connectivity: false,
@@ -91,11 +110,22 @@ export default function EditPropertyModal({
     financial_risk: false,
     liquidity_risk: false,
     physical_risk: false,
+    risk_percentage: undefined,
     features: [],
     images: [],
-    views: null,
-    createdAt: "",
-    updatedAt: "",
+    taluka: "",
+    district: "",
+    nearest_town: "",
+    nearest_road: "",
+    distance_to_nearest_road: undefined,
+    nearest_school_colleges: "",
+    zoning_status: "",
+    na_permit: false,
+    upcoming_infra: "",
+    ownership_type: "",
+    rera_restration: "",
+    town_planning_permit: "",
+    jantri_rate: undefined,
   });
 
   const [displayPrice, setDisplayPrice] = useState("");
@@ -106,45 +136,49 @@ export default function EditPropertyModal({
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
-  // Format number to comma-separated string
-  const formatPrice = (value: number) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // HELPERS
+  const formatPrice = (v: number) =>
+    v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const parsePrice = (v: string) => Number(v.replace(/,/g, ""));
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://via.placeholder.com/150?text=No+Image";
+    return path.startsWith("http") ? path : `${BASE_IMAGE_URL}/${path}`;
   };
 
-  // Parse comma-separated string to number
-  const parsePrice = (value: string) => {
-    return Number(value.replace(/,/g, ""));
+  const totalImageCount = existingImages.length + newImages.length;
+
+  // Get file names from input
+  const getSelectedFileNames = () => {
+    if (!fileInputRef.current?.files) return "";
+    return Array.from(fileInputRef.current.files)
+      .map((f) => f.name)
+      .join(", ");
   };
 
-  // Reinitialize formData when property or isOpen changes
+  // EFFECTS
   useEffect(() => {
     if (property && isOpen) {
       setFormData({
-        id: property.id || "",
-        title: property.title || "",
-        price: property.price || 0,
-        type: property.type || "Agricultural",
-        size: property.size || "",
-        primary_purpose: property.primary_purpose || "Personal Use",
-        location: property.location || "",
-        latitude: property.latitude || 0,
-        longitude: property.longitude || 0,
-        description: property.description || "",
-        private: property.private || false,
-        investment_gain: property.investment_gain || 0,
-        water_connectivity: property.water_connectivity || false,
-        electricity_connectivity: property.electricity_connectivity || false,
-        gas_connectivity: property.gas_connectivity || false,
-        market_risk: property.market_risk || false,
-        regulatory_risk: property.regulatory_risk || false,
-        financial_risk: property.financial_risk || false,
-        liquidity_risk: property.liquidity_risk || false,
-        physical_risk: property.physical_risk || false,
+        ...property,
         features: property.features || [],
         images: property.images || [],
-        views: property.views || null,
-        createdAt: property.createdAt || "",
-        updatedAt: property.updatedAt || "",
+        taluka: property.taluka || "",
+        district: property.district || "",
+        nearest_town: property.nearest_town || "",
+        nearest_road: property.nearest_road || "",
+        distance_to_nearest_road: property.distance_to_nearest_road || undefined,
+        nearest_school_colleges: property.nearest_school_colleges || "",
+        zoning_status: property.zoning_status || "",
+        na_permit: property.na_permit || false,
+        upcoming_infra: property.upcoming_infra || "",
+        ownership_type: property.ownership_type || "",
+        rera_restration: property.rera_restration || "",
+        town_planning_permit: property.town_planning_permit || "",
+        jantri_rate: property.jantri_rate || undefined,
       });
       setDisplayPrice(formatPrice(property.price || 0));
       setFeaturesInput((property.features || []).join(", "));
@@ -152,43 +186,107 @@ export default function EditPropertyModal({
       setDeletedImages([]);
       setNewImages([]);
       setError("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } else if (!isOpen) {
-      setFormData({
-        id: "",
-        title: "",
-        price: 0,
-        type: "Agricultural",
-        size: "",
-        primary_purpose: "Personal Use",
-        location: "",
-        latitude: 0,
-        longitude: 0,
-        description: "",
-        private: false,
-        investment_gain: 0,
-        water_connectivity: false,
-        electricity_connectivity: false,
-        gas_connectivity: false,
-        market_risk: false,
-        regulatory_risk: false,
-        financial_risk: false,
-        liquidity_risk: false,
-        physical_risk: false,
-        features: [],
-        images: [],
-        views: null,
-        createdAt: "",
-        updatedAt: "",
-      });
-      setDisplayPrice("");
-      setFeaturesInput("");
-      setExistingImages([]);
-      setDeletedImages([]);
-      setNewImages([]);
-      setError("");
+      resetForm();
     }
   }, [property, isOpen]);
 
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      price: 0,
+      type: "Agricultural",
+      size: "",
+      primary_purpose: "Personal Use",
+      location: "",
+      latitude: 0,
+      longitude: 0,
+      description: "",
+      private: false,
+      investment_gain: undefined,
+      return_of_investment: undefined,
+      water_connectivity: false,
+      electricity_connectivity: false,
+      gas_connectivity: false,
+      market_risk: false,
+      regulatory_risk: false,
+      financial_risk: false,
+      liquidity_risk: false,
+      physical_risk: false,
+      risk_percentage: undefined,
+      features: [],
+      images: [],
+      taluka: "",
+      district: "",
+      nearest_town: "",
+      nearest_road: "",
+      distance_to_nearest_road: undefined,
+      nearest_school_colleges: "",
+      zoning_status: "",
+      na_permit: false,
+      upcoming_infra: "",
+      ownership_type: "",
+      rera_restration: "",
+      town_planning_permit: "",
+      jantri_rate: undefined,
+    });
+    setDisplayPrice("");
+    setFeaturesInput("");
+    setExistingImages([]);
+    setDeletedImages([]);
+    setNewImages([]);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // IMAGE HANDLERS
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles = Array.from(files);
+    const totalAfter = totalImageCount + newFiles.length;
+
+    if (totalAfter > MAX_IMAGES) {
+      const allowed = MAX_IMAGES - totalImageCount;
+      toast.error(
+        `You can only add ${allowed} more image(s). Max ${MAX_IMAGES} allowed.`
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setNewImages((prev) => [...prev, ...newFiles]);
+    toast.success(`${newFiles.length} image(s) added. Total: ${totalAfter}`);
+  };
+
+  const removeExistingImage = (img: string) => {
+    setExistingImages((prev) => prev.filter((i) => i !== img));
+    setDeletedImages((prev) => [...prev, img]);
+    if (newImages.length === 0 && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeNewImage = (idx: number) => {
+    const removedFile = newImages[idx];
+    setNewImages((prev) => prev.filter((_, i) => i !== idx));
+
+    const dt = new DataTransfer();
+    newImages
+      .filter((_, i) => i !== idx)
+      .forEach((f) => dt.items.add(f));
+    if (fileInputRef.current) {
+      fileInputRef.current.files = dt.files;
+    }
+
+    if (dt.files.length === 0 && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // SAVE
   const handleSave = async () => {
     if (
       !formData.title ||
@@ -210,58 +308,38 @@ export default function EditPropertyModal({
         .split(",")
         .map((f) => f.trim())
         .filter((f) => f);
+
       await onSave({
         ...formData,
         price: parsePrice(displayPrice || "0"),
         features: featuresArray,
-        images: newImages,
+        images: newImages.length > 0 ? newImages : existingImages,
         existingImages: existingImages.length ? existingImages : null,
         deletedImages: deletedImages.length ? deletedImages : null,
       });
+
       toast.success(
-        property
-          ? "Property updated successfully"
-          : "Property added successfully"
+        property ? "Property updated successfully" : "Property added successfully"
       );
       onClose();
     } catch (err: any) {
-      const errorMessage =
+      const msg =
         err.response?.data?.message ||
         "Failed to save property. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const removeFeature = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      features: prev.features?.filter((_, i) => i !== index) || [],
-    }));
-    setFeaturesInput(
-      (formData.features?.filter((_, i) => i !== index) || []).join(", ")
-    );
+  const removeFeature = (idx: number) => {
+    const updated = formData.features?.filter((_, i) => i !== idx) || [];
+    setFormData((prev) => ({ ...prev, features: updated }));
+    setFeaturesInput(updated.join(", "));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      setNewImages((prev) => [...prev, ...newFiles]);
-    }
-  };
-
-  const removeExistingImage = (image: string) => {
-    setExistingImages((prev) => prev.filter((img) => img !== image));
-    setDeletedImages((prev) => [...prev, image]);
-  };
-
-  const removeNewImage = (index: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
+  // RENDER
   if (!isOpen) return null;
 
   return (
@@ -276,9 +354,7 @@ export default function EditPropertyModal({
           </DialogTitle>
         </DialogHeader>
         <p id="edit-property-description" className="sr-only">
-          Form to edit or add property details including title, price, type,
-          size, primary purpose, location, coordinates, description, private
-          status, investment gain, connectivity, risks, features, and images.
+          Form to edit or add property details.
         </p>
 
         <div className="space-y-6">
@@ -288,7 +364,7 @@ export default function EditPropertyModal({
             </div>
           )}
 
-          {/* Basic Information */}
+          {/* BASIC INFO */}
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -296,35 +372,32 @@ export default function EditPropertyModal({
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Property Title</Label>
+                  <Label htmlFor="title">Property Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }))
+                      setFormData((p) => ({ ...p, title: e.target.value }))
                     }
                     placeholder="Enter property title"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="price">Price (₹)</Label>
+                  <Label htmlFor="price">Price (₹) *</Label>
                   <Input
                     id="price"
                     type="text"
                     value={displayPrice}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9,]/g, "");
-                      setDisplayPrice(value);
-                      setFormData((prev) => ({
-                        ...prev,
-                        price: parsePrice(value || "0"),
+                      const v = e.target.value.replace(/[^0-9,]/g, "");
+                      setDisplayPrice(v);
+                      setFormData((p) => ({
+                        ...p,
+                        price: parsePrice(v || "0"),
                       }));
                     }}
-                    placeholder="Enter price in rupees (e.g., 30,000)"
+                    placeholder="e.g. 30,000"
                     required
                   />
                 </div>
@@ -332,11 +405,11 @@ export default function EditPropertyModal({
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="type">Property Type</Label>
+                  <Label htmlFor="type">Property Type *</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, type: value }))
+                    onValueChange={(v) =>
+                      setFormData((p) => ({ ...p, type: v }))
                     }
                   >
                     <SelectTrigger>
@@ -344,46 +417,44 @@ export default function EditPropertyModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Agricultural">Agricultural</SelectItem>
-                      <SelectItem value="Non-Agricultural">
-                        Non-Agricultural
-                      </SelectItem>
+                      <SelectItem value="Residential">Residential</SelectItem>
+                      <SelectItem value="Commercial">Commercial</SelectItem>
                       <SelectItem value="Farmhouse">Farmhouse</SelectItem>
                       <SelectItem value="Industrial">Industrial</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="size">Size</Label>
+                  <Label htmlFor="size">Size *</Label>
                   <Input
                     id="size"
                     value={formData.size}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, size: e.target.value }))
+                      setFormData((p) => ({ ...p, size: e.target.value }))
                     }
-                    placeholder="e.g., 5 acres, 2400 sq ft"
+                    placeholder="e.g. 5 acres"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="primary_purpose">Primary Purpose</Label>
+                  <Label htmlFor="primary_purpose">Primary Purpose *</Label>
                   <Select
                     value={formData.primary_purpose}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        primary_purpose: value,
+                    onValueChange={(v) =>
+                      setFormData((p) => ({
+                        ...p,
+                        primary_purpose: v,
                       }))
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select primary purpose" />
+                      <SelectValue placeholder="Select purpose" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Personal Use">Personal Use</SelectItem>
                       <SelectItem value="Investment">Investment</SelectItem>
-                      <SelectItem value="Commercial Use">
-                        Commercial Use
+                      <SelectItem value="Commercial Development">
+                        Commercial Development
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -392,13 +463,13 @@ export default function EditPropertyModal({
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">Location *</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         location: e.target.value,
                       }))
                     }
@@ -407,36 +478,36 @@ export default function EditPropertyModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="latitude">Latitude</Label>
+                  <Label htmlFor="latitude">Latitude *</Label>
                   <Input
                     id="latitude"
                     type="number"
                     step="any"
                     value={formData.latitude}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         latitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="Enter latitude"
+                    placeholder="e.g. 26.9124"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="longitude">Longitude</Label>
+                  <Label htmlFor="longitude">Longitude *</Label>
                   <Input
                     id="longitude"
                     type="number"
                     step="any"
                     value={formData.longitude}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         longitude: Number(e.target.value),
                       }))
                     }
-                    placeholder="Enter longitude"
+                    placeholder="e.g. 75.7873"
                     required
                   />
                 </div>
@@ -448,14 +519,13 @@ export default function EditPropertyModal({
                   id="description"
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
+                    setFormData((p) => ({
+                      ...p,
                       description: e.target.value,
                     }))
                   }
-                  placeholder="Enter property description"
+                  placeholder="Describe the property"
                   rows={3}
-                  required
                 />
               </div>
 
@@ -463,272 +533,460 @@ export default function EditPropertyModal({
                 <Switch
                   id="private"
                   checked={formData.private}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      private: checked,
-                    }))
+                  onCheckedChange={(c) =>
+                    setFormData((p) => ({ ...p, private: c }))
                   }
                 />
                 <Label htmlFor="private">Private Property</Label>
               </div>
 
               <div>
-                <Label htmlFor="investment_gain">Investment Gain (%)</Label>
+                <Label htmlFor="investment_gain">Investment Gain (₹)</Label>
                 <Input
                   id="investment_gain"
+                  type="text"
+                  value={
+                    formData.investment_gain
+                      ? formatPrice(formData.investment_gain)
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9]/g, "");
+                    setFormData((p) => ({
+                      ...p,
+                      investment_gain: v ? Number(v) : undefined,
+                    }));
+                  }}
+                  placeholder="e.g. 15000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="return_of_investment">Return on Investment (%)</Label>
+                <Input
+                  id="return_of_investment"
                   type="number"
-                  step="0.1"
-                  value={formData.investment_gain || ""}
+                  value={formData.return_of_investment || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      investment_gain: Number(e.target.value),
+                    setFormData((p) => ({
+                      ...p,
+                      return_of_investment: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
                     }))
                   }
-                  placeholder="Enter estimated investment gain percentage"
+                  placeholder="e.g. 15"
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Connectivity and Risks */}
+          {/* LOCATION DETAILS */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Location Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="taluka">Taluka</Label>
+                  <Input
+                    id="taluka"
+                    value={formData.taluka}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, taluka: e.target.value }))
+                    }
+                    placeholder="e.g. Phagi"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Input
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, district: e.target.value }))
+                    }
+                    placeholder="e.g. Jaipur"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nearest_town">Nearest Town</Label>
+                  <Input
+                    id="nearest_town"
+                    value={formData.nearest_town}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, nearest_town: e.target.value }))
+                    }
+                    placeholder="e.g. Dudu"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nearest_road">Nearest Road</Label>
+                  <Input
+                    id="nearest_road"
+                    value={formData.nearest_road}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, nearest_road: e.target.value }))
+                    }
+                    placeholder="e.g. NH-48"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="distance_to_nearest_road">
+                    Distance to Nearest Road (km)
+                  </Label>
+                  <Input
+                    id="distance_to_nearest_road"
+                    type="number"
+                    value={formData.distance_to_nearest_road || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        distance_to_nearest_road: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 2.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nearest_school_colleges">
+                    Nearest Schools/Colleges (comma-separated)
+                  </Label>
+                  <Input
+                    id="nearest_school_colleges"
+                    value={formData.nearest_school_colleges}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        nearest_school_colleges: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. St. Xavier School, Govt. Arts College"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* PROPERTY DETAILS */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="zoning_status">Zoning Status</Label>
+                  <Input
+                    id="zoning_status"
+                    value={formData.zoning_status}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, zoning_status: e.target.value }))
+                    }
+                    placeholder="e.g. Agricultural Zone"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ownership_type">Ownership Type</Label>
+                  <Input
+                    id="ownership_type"
+                    value={formData.ownership_type}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        ownership_type: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Freehold"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rera_restration">RERA Registration</Label>
+                  <Input
+                    id="rera_restration"
+                    value={formData.rera_restration}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        rera_restration: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. RAJ-2025-12345"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="town_planning_permit">
+                    Town Planning Permit
+                  </Label>
+                  <Input
+                    id="town_planning_permit"
+                    value={formData.town_planning_permit}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        town_planning_permit: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Approved"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="upcoming_infra">
+                    Upcoming Infrastructure (comma-separated)
+                  </Label>
+                  <Input
+                    id="upcoming_infra"
+                    value={formData.upcoming_infra}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        upcoming_infra: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Ring Road Extension, New Industrial Hub"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="jantri_rate">Jantri Rate</Label>
+                  <Input
+                    id="jantri_rate"
+                    type="number"
+                    value={formData.jantri_rate || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        jantri_rate: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 550"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="na_permit"
+                  checked={formData.na_permit}
+                  onCheckedChange={(c) =>
+                    setFormData((p) => ({ ...p, na_permit: c }))
+                  }
+                />
+                <Label htmlFor="na_permit">NA Permit</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CONNECTIVITY & RISKS */}
           <Card>
             <CardHeader>
               <CardTitle>Connectivity and Risk Factors</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="water_connectivity">Water Connectivity</Label>
-                  <Select
-                    value={formData.water_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        water_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="electricity_connectivity">
-                    Electricity Connectivity
-                  </Label>
-                  <Select
-                    value={formData.electricity_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        electricity_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="gas_connectivity">Gas Connectivity</Label>
-                  <Select
-                    value={formData.gas_connectivity ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        gas_connectivity: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {["water", "electricity", "gas"].map((key) => (
+                  <div key={key}>
+                    <Label htmlFor={`${key}_connectivity`}>
+                      {key.charAt(0).toUpperCase() + key.slice(1)} Connectivity
+                    </Label>
+                    <Select
+                      value={
+                        formData[`${key}_connectivity` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${key}_connectivity`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="market_risk">
-                    Market Risk (Price Volatility)
-                  </Label>
-                  <Select
-                    value={formData.market_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        market_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="regulatory_risk">
-                    Regulatory Risk (Zoning/Permitting)
-                  </Label>
-                  <Select
-                    value={formData.regulatory_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        regulatory_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="financial_risk">
-                    Financial Risk (Tax Burden)
-                  </Label>
-                  <Select
-                    value={formData.financial_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        financial_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {[
+                  { key: "market", label: "Market Risk" },
+                  { key: "regulatory", label: "Regulatory Risk" },
+                  { key: "financial", label: "Financial Risk" },
+                ].map((item) => (
+                  <div key={item.key}>
+                    <Label htmlFor={item.key + "_risk"}>{item.label}</Label>
+                    <Select
+                      value={
+                        formData[`${item.key}_risk` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${item.key}_risk`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="liquidity_risk">
-                    Liquidity Risk (Selling Difficulty)
-                  </Label>
-                  <Select
-                    value={formData.liquidity_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        liquidity_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="physical_risk">
-                    Physical Risk (Site Conditions)
-                  </Label>
-                  <Select
-                    value={formData.physical_risk ? "Yes" : "No"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        physical_risk: value === "Yes",
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {[
+                  { key: "liquidity", label: "Liquidity Risk" },
+                  { key: "physical", label: "Physical Risk" },
+                ].map((item) => (
+                  <div key={item.key}>
+                    <Label htmlFor={item.key + "_risk"}>{item.label}</Label>
+                    <Select
+                      value={
+                        formData[`${item.key}_risk` as keyof Property]
+                          ? "Yes"
+                          : "No"
+                      }
+                      onValueChange={(v) =>
+                        setFormData((p) => ({
+                          ...p,
+                          [`${item.key}_risk`]: v === "Yes",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <Label htmlFor="risk_percentage">Risk Percentage (%)</Label>
+                <Input
+                  id="risk_percentage"
+                  type="number"
+                  value={formData.risk_percentage || ""}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      risk_percentage: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
+                    }))
+                  }
+                  placeholder="e.g. 50"
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Images */}
+          {/* IMAGES */}
           <Card>
             <CardHeader>
               <CardTitle>Property Images</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {totalImageCount} / {MAX_IMAGES} images
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="images">Upload Images</Label>
-                <Input
-                  id="images"
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={fileInputRef}
+                    id="images"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={totalImageCount >= MAX_IMAGES}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-muted-foreground whitespace-nowrap max-w-xs truncate">
+                    {getSelectedFileNames() || "No file chosen"}
+                  </span>
+                </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                {existingImages.map((image, index) => (
-                  <div key={index} className="relative">
+
+              {totalImageCount >= MAX_IMAGES && (
+                <p className="text-xs text-destructive">
+                  Maximum {MAX_IMAGES} images reached.
+                </p>
+              )}
+
+              <div className="grid md:grid-cols-3 gap-4">
+                {existingImages.map((img, i) => (
+                  <div
+                    key={`exist-${i}`}
+                    className="relative group rounded-lg overflow-hidden"
+                  >
                     <img
-                      src={image}
-                      alt={`Property ${index + 1}`}
-                      className="w-full h-32 object-cover rounded"
+                      src={getImageUrl(img)}
+                      alt={`Existing ${i + 1}`}
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/150?text=Not+Found";
+                      }}
                     />
                     <Button
                       variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeExistingImage(image)}
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeExistingImage(img)}
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
-                {newImages.map((image, index) => (
-                  <div key={`new-${index}`} className="relative">
+
+                {newImages.map((file, i) => (
+                  <div
+                    key={`new-${i}`}
+                    className="relative group rounded-lg overflow-hidden"
+                  >
                     <img
-                      src={URL.createObjectURL(image)}
-                      alt={`New Property ${index + 1}`}
-                      className="w-full h-32 object-cover rounded"
+                      src={URL.createObjectURL(file)}
+                      alt={`New ${i + 1}`}
+                      className="w-full h-32 object-cover"
                     />
                     <Button
                       variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeNewImage(index)}
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeNewImage(i)}
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
@@ -736,47 +994,41 @@ export default function EditPropertyModal({
             </CardContent>
           </Card>
 
-          {/* Features */}
+          {/* FEATURES */}
           <Card>
             <CardHeader>
               <CardTitle>Property Features</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  value={featuresInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFeaturesInput(value);
-                    const featuresArray = value
-                      .split(",")
-                      .map((f) => f.trim())
-                      .filter((f) => f);
-                    setFormData((prev) => ({
-                      ...prev,
-                      features: featuresArray,
-                    }));
-                  }}
-                  placeholder="Enter features (e.g., Water Supply, Fenced, Road Access)"
-                  className="flex-1"
-                />
-              </div>
+              <Input
+                value={featuresInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFeaturesInput(val);
+                  const arr = val
+                    .split(",")
+                    .map((f) => f.trim())
+                    .filter((f) => f);
+                  setFormData((p) => ({ ...p, features: arr }));
+                }}
+                placeholder="e.g. Well, Canal, Fenced"
+              />
               <div className="flex flex-wrap gap-2">
-                {formData.features?.map((feature, index) => (
+                {formData.features?.map((f, i) => (
                   <Badge
-                    key={index}
+                    key={i}
                     variant="secondary"
                     className="cursor-pointer"
-                    onClick={() => removeFeature(index)}
+                    onClick={() => removeFeature(i)}
                   >
-                    {feature} <X className="w-3 h-3 ml-1" />
+                    {f} <X className="w-3 h-3 ml-1" />
                   </Badge>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
+          {/* ACTIONS */}
           <div className="flex gap-4 pt-4">
             <Button
               onClick={handleSave}
@@ -789,7 +1041,10 @@ export default function EditPropertyModal({
             </Button>
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
               className="flex-1"
               size="lg"
               disabled={isSaving}

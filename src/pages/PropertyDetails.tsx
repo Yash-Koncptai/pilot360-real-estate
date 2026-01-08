@@ -1,4 +1,3 @@
-
 import Seo from "@/components/Seo";
 import { Property } from "@/data/landProperties";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +57,13 @@ export default function PropertyDetails() {
             ...response.data.property,
             amenities: response.data.property.features || [],
             floorplan: response.data.property.floorplan || "/placeholder.svg",
+            rera_registration:
+              response.data.property.rera_restration ||
+              response.data.property.rera_registration ||
+              "Not registered",
+            nearest_school_colleges:
+              response.data.property.nearest_school_colleges || [],
+            upcoming_infra: response.data.property.upcoming_infra || [],
             aiInsights: response.data.property.aiInsights || {
               matchScore: response.data.property.matchPercentage || 0,
               growthPotential:
@@ -218,16 +224,6 @@ export default function PropertyDetails() {
         structuredData={jsonLd}
       />
       <article>
-        {/* <nav className="mb-4">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
-        </nav> */}
-
         <header className="mb-4">
           <h1 className="text-3xl font-bold">{property.title}</h1>
           <p className="text-muted-foreground">{property.location}</p>
@@ -295,8 +291,7 @@ export default function PropertyDetails() {
                       : "text-gray-400"
                   }`}
                 />
-                Water:{" "}
-                {property.water_connectivity ? "Available" : "Not Available"}
+                Water: {property.water_connectivity ? "Available" : "Not Available"}
               </li>
               <li className="flex items-center gap-2">
                 <Zap
@@ -306,17 +301,12 @@ export default function PropertyDetails() {
                       : "text-gray-400"
                   }`}
                 />
-                Electricity:{" "}
-                {property.electricity_connectivity
-                  ? "Available"
-                  : "Not Available"}
+                Electricity: {property.electricity_connectivity ? "Available" : "Not Available"}
               </li>
               <li className="flex items-center gap-2">
                 <Flame
                   className={`w-4 h-4 ${
-                    property.gas_connectivity
-                      ? "text-orange-500"
-                      : "text-gray-400"
+                    property.gas_connectivity ? "text-orange-500" : "text-gray-400"
                   }`}
                 />
                 Gas: {property.gas_connectivity ? "Available" : "Not Available"}
@@ -327,14 +317,12 @@ export default function PropertyDetails() {
             <div className="space-y-2">
               {property.investment_gain && (
                 <p className="text-muted-foreground">
-                  Expected Investment Gain: {property.investment_gain}% per
-                  annum
+                  Expected Investment Gain: {property.investment_gain}% per annum
                 </p>
               )}
               {property.return_of_investment && (
                 <p className="text-muted-foreground">
-                  Return on Investment: {property.return_of_investment}% per
-                  annum
+                  Return on Investment: {property.return_of_investment}% per annum
                 </p>
               )}
               <p className="text-muted-foreground">
@@ -392,6 +380,45 @@ export default function PropertyDetails() {
               )}
             </ul>
 
+            <h2 className="text-xl font-semibold mt-6">Property Details</h2>
+            <ul className="grid grid-cols-2 gap-2 text-muted-foreground list-disc pl-4">
+              <li>Taluka: {property.taluka || "Not specified"}</li>
+              <li>District: {property.district || "Not specified"}</li>
+              <li>Nearest Town: {property.nearest_town || "Not specified"}</li>
+              <li>Nearest Road: {property.nearest_road || "Not specified"}</li>
+              <li>
+                Distance to Nearest Road:{" "}
+                {property.distance_to_nearest_road != null
+                  ? `${property.distance_to_nearest_road} km`
+                  : "Not specified"}
+              </li>
+              <li>
+                Nearest Schools/Colleges:{" "}
+                {property.nearest_school_colleges?.length
+                  ? property.nearest_school_colleges.join(", ")
+                  : "Not specified"}
+              </li>
+              <li>Zoning Status: {property.zoning_status || "Not specified"}</li>
+              <li>NA Permit: {property.na_permit ? "Yes" : "No"}</li>
+              <li>
+                Upcoming Infrastructure:{" "}
+                {property.upcoming_infra?.length
+                  ? property.upcoming_infra.join(", ")
+                  : "Not specified"}
+              </li>
+              <li>Ownership Type: {property.ownership_type || "Not specified"}</li>
+              <li>RERA Registration: {property.rera_registration || "Not registered"}</li>
+              <li>
+                Town Planning Permit: {property.town_planning_permit || "Not specified"}
+              </li>
+              <li>
+                Jantri Rate:{" "}
+                {property.jantri_rate != null
+                  ? formatPrice(property.jantri_rate) + " per sq ft"
+                  : "Not specified"}
+              </li>
+            </ul>
+
             <h2 className="text-xl font-semibold mt-6">Amenities</h2>
             <ul className="grid grid-cols-2 gap-2 text-muted-foreground list-disc pl-4">
               {property.amenities.length > 0 ? (
@@ -421,9 +448,7 @@ export default function PropertyDetails() {
           </div>
 
           <aside className="bg-card p-4 rounded-lg h-fit">
-            <h2 className="text-lg font-semibold">
-              Contact / Schedule a Visit
-            </h2>
+            <h2 className="text-lg font-semibold">Contact / Schedule a Visit</h2>
             <div className="mt-3 space-y-3">
               <Input
                 placeholder="Name"
